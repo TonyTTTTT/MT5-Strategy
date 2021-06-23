@@ -239,8 +239,8 @@ void al_complex::operator+=(const al_complex &rhs)
 //+------------------------------------------------------------------+
 void al_complex::operator-=(const al_complex &rhs)
   {
-   re+=rhs.re;
-   im+=rhs.im;
+   re-=rhs.re;
+   im-=rhs.im;
   }
 //+------------------------------------------------------------------+
 //| Overloading (==)                                                 |
