@@ -10,7 +10,9 @@
 	
 - Init the mon-1 strategy
 	- find that if declare "ENUM_POSITION_TYPE var = NULL"; there will be a big problem when comparing(==)
-	- two version, when inverse info. come
+	- three version, when inverse info. come
 		- close
+		- close and ordering at same trend
 		- close and buy
+		
 
