@@ -30,13 +30,17 @@
 // sell -> BID
 int deviation = 5;
 int try = 1;
-ENUM_POSITION_TYPE closePosition(ENUM_POSITION_TYPE tg_type)
+// type_int = 0 -> no position
+// type_int = 1 -> POSITION_TYPE_BUY
+// type_int = 2 -> POSITION_TYPE_SELL
+int closePosition(ENUM_POSITION_TYPE tg_type)
 {
    int total = PositionsTotal();
-   ENUM_POSITION_TYPE type = NULL;
+   ENUM_POSITION_TYPE type;
+   int type_int = 0;
    Print("total: ", total);
    if(total == 0)
-      return type;
+      return type_int;
    MqlTradeRequest request;
    MqlTradeResult result;
    for(int i = total-1; i>=0; i--)
@@ -70,11 +74,13 @@ ENUM_POSITION_TYPE closePosition(ENUM_POSITION_TYPE tg_type)
       request.magic = magic;
       if(type == POSITION_TYPE_BUY)
       {
+         type_int = 1;
          request.price = SymbolInfoDouble(position_symbol, SYMBOL_BID);
          request.type = ORDER_TYPE_SELL;
       }
       else if(type == POSITION_TYPE_SELL)
       {
+         type_int = 2;
          request.price = SymbolInfoDouble(position_symbol, SYMBOL_ASK);
          request.type = ORDER_TYPE_BUY;    
       }
@@ -111,15 +117,24 @@ ENUM_POSITION_TYPE closePosition(ENUM_POSITION_TYPE tg_type)
          PrintFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order); */
       }
    }
-   return type; 
+   return type_int; 
 }
 
 
 void buy()
 {
-   ENUM_POSITION_TYPE type = closePosition(POSITION_TYPE_SELL);
-   if(type != POSITION_TYPE_BUY)
+   int type_int = closePosition(POSITION_TYPE_SELL);
+   
+   if(type_int == 0)
+      Print("No position now, Buy!");
+   else if(type_int == 1)
+      Print("Having same trend position, Buy!");
+   else if(type_int == 2)
+      PrintFormat("Having reverse trend position, Close Sell Positions!"); 
+      
+   if(type_int == 0 || type_int == 1)
    {
+      if(type_int==0)
       PrintFormat("Buying: %s", _Symbol);
       string target = _Symbol;
       MqlTradeRequest request = {};
@@ -136,44 +151,49 @@ void buy()
       if(OrderCheck(request, ch_result))
       {
          Print("Enough money!");
+         for(int j=0; j<try; j++)
+         {
+            if(!OrderSend(request, result))
+            {
+               PrintFormat("OrderSend error %d", GetLastError());
+               Print("retcode: ", result.retcode);
+               request.price = SymbolInfoDouble(target, SYMBOL_ASK);
+            }
+            else
+            {
+               PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+               break;
+            }   
+         }
+         /*while(!OrderSend(request, result))
+         {
+            PrintFormat("OrderSend error %d", GetLastError());
+            Print("retcode: ", result.retcode);
+            request.price = SymbolInfoDouble(target, SYMBOL_ASK);
+         }
+         PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);*/
       }
       else
       {
          Print("Can't buy, no enough money!");
          PrintFormat("OrderSend error %d", GetLastError());
       }
-      
-      for(int j=0; j<try; j++)
-      {
-         if(!OrderSend(request, result))
-         {
-            PrintFormat("OrderSend error %d", GetLastError());
-            Print("retcode: ", result.retcode);
-            request.price = SymbolInfoDouble(target, SYMBOL_ASK);
-         }
-         else
-         {
-            PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-            break;
-         }   
-      }
-      /*while(!OrderSend(request, result))
-      {
-         PrintFormat("OrderSend error %d", GetLastError());
-         Print("retcode: ", result.retcode);
-         request.price = SymbolInfoDouble(target, SYMBOL_ASK);
-      }
-      PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);*/
-    }
-    else
-      PrintFormat("Trend same, do nothing in this peroid!");
+    }  
 }
 
 
 void sell()
 {
-   ENUM_POSITION_TYPE type = closePosition(POSITION_TYPE_BUY);
-   if(type != POSITION_TYPE_SELL)
+   int type_int = closePosition(POSITION_TYPE_BUY);
+
+   if(type_int == 0)
+      Print("No position now, Sell!");
+   else if(type_int == 2)
+      Print("Having same trend position, Sell!");
+   else if(type_int == 1)
+      PrintFormat("Having reverse trend position, Close Buy Positions!"); 
+
+   if(type_int == 0 || type_int == 2) 
    {
       PrintFormat("Selling: %s", _Symbol);
       string target = _Symbol;
@@ -191,35 +211,32 @@ void sell()
       if(OrderCheck(request, ch_result))
       {
          Print("Enough money!");
+         for(int j=0; j<try; j++)
+         {
+            if(!OrderSend(request, result))
+            {
+               PrintFormat("OrderSend error %d", GetLastError());
+               Print("retcode: ", result.retcode);
+               request.price = SymbolInfoDouble(target, SYMBOL_BID);
+            }
+            else
+            {
+               PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+               break;
+            }   
+         }
+         /*while(!OrderSend(request, result))
+         {
+            PrintFormat("OrderSend error %d", GetLastError());
+            Print("retcode: ", result.retcode);
+            request.price = SymbolInfoDouble(target, SYMBOL_BID);
+         }
+         PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);*/
       }
       else
       {
          Print("Can't buy, no enough money!");
          PrintFormat("OrderSend error %d", GetLastError());
       }
-      
-      for(int j=0; j<try; j++)
-      {
-         if(!OrderSend(request, result))
-         {
-            PrintFormat("OrderSend error %d", GetLastError());
-            Print("retcode: ", result.retcode);
-            request.price = SymbolInfoDouble(target, SYMBOL_BID);
-         }
-         else
-         {
-            PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-            break;
-         }   
-      }
-      /*while(!OrderSend(request, result))
-      {
-         PrintFormat("OrderSend error %d", GetLastError());
-         Print("retcode: ", result.retcode);
-         request.price = SymbolInfoDouble(target, SYMBOL_BID);
-      }
-      PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);*/
    }
-   else
-      PrintFormat("Trend same, do nothing in this peroid!");
 }
