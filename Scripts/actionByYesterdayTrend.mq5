@@ -100,6 +100,7 @@ void OnStart()
    else if(price_trend < 0)
    {
       request.type = ORDER_TYPE_SELL;
+      request.price = SymbolInfoDouble(target, SYMBOL_BID);
       if(OrderCheck(request, ch_result))
       {
          Print("Enough money!");
