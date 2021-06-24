@@ -28,8 +28,8 @@
 
 // buy -> ASK
 // sell -> BID
-int deviation = 1000;
-int try = 5;
+int deviation = 5;
+int try = 1;
 ENUM_POSITION_TYPE closePosition(ENUM_POSITION_TYPE tg_type)
 {
    int total = PositionsTotal();
