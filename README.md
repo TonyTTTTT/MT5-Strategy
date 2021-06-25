@@ -14,5 +14,7 @@
 		- close
 		- close and ordering at same trend
 		- close and buy
-		
+
+## 2021/6/25
+- Refactor EA mon-1's code
 
