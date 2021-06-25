@@ -36,7 +36,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
 //+------------------------------------------------------------------+
-int OnCalculate(const int rates_total,
+/*int OnCalculate(const int rates_total,
                 const int prev_calculated,
                 const datetime &time[],
                 const double &open[],
@@ -51,5 +51,5 @@ int OnCalculate(const int rates_total,
    Print("OnCalculating!");
 //--- return value of prev_calculated for next call
    return(rates_total);
-  }
+  }*/
 //+------------------------------------------------------------------+

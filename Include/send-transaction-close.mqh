@@ -28,210 +28,176 @@
 
 // buy -> ASK
 // sell -> BID
-int deviation = 5;
-int try = 1;
-// type_int = 0 -> no position
-// type_int = 1 -> POSITION_TYPE_BUY
-// type_int = 2 -> POSITION_TYPE_SELL
-int closePosition(ENUM_POSITION_TYPE tg_type)
+
+class OrderSender
 {
-   int total = PositionsTotal();
-   ENUM_POSITION_TYPE type;
-   int type_int = 0;
-   if(total == 0)
-      return type_int;
-   Print("total: ", total);
-   MqlTradeRequest request;
-   MqlTradeResult result;
-   for(int i = total-1; i>=0; i--)
-   {
-      ulong position_ticket=PositionGetTicket(i);
-      string position_symbol = PositionGetString(POSITION_SYMBOL);
-      int digits = (int)SymbolInfoInteger(position_symbol, SYMBOL_DIGITS);
-      ulong magic = PositionGetInteger(POSITION_MAGIC);
-      double volume = PositionGetDouble(POSITION_VOLUME);
-      double sl = PositionGetDouble(POSITION_SL);
-      double tp = PositionGetDouble(POSITION_TP);
-      type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
-      PrintFormat("#%I64u %s  %s  volume: %.2f  price: %s  sl: %s  tp: %s  [%I64d]",
-                  position_ticket,
-                  position_symbol,
-                  EnumToString(type),
-                  volume,
-                  DoubleToString(PositionGetDouble(POSITION_PRICE_OPEN),digits),
-                  DoubleToString(sl,digits),
-                  DoubleToString(tp,digits),
-                  magic);
-      ZeroMemory(request);
-      ZeroMemory(result);
-      request.action = TRADE_ACTION_DEAL;
-      request.position = position_ticket;
-      request.symbol = position_symbol;
-      request.volume = volume;
-      request.deviation = 5;
-      request.magic = magic;
-      request.position_by = PositionGetInteger(POSITION_TICKET);
-      request.magic = magic;
-      if(type == POSITION_TYPE_BUY)
+   public:
+      // constructor
+      void OrderSender(ushort reorder_try_param)
       {
-         type_int = 1;
-         request.price = SymbolInfoDouble(position_symbol, SYMBOL_BID);
-         request.type = ORDER_TYPE_SELL;
-      }
-      else if(type == POSITION_TYPE_SELL)
-      {
-         type_int = 2;
-         request.price = SymbolInfoDouble(position_symbol, SYMBOL_ASK);
-         request.type = ORDER_TYPE_BUY;    
+         deviation = 5;
+         reorder_try = reorder_try_param;
+         volume = 1;
+         magic = 17236;
       }
       
-      if(type == tg_type)
+   private:
+      int deviation;
+      ushort reorder_try;
+      double volume;
+      ulong magic;
+   private:
+      MqlTradeRequest setOrderRequest(ENUM_ORDER_TYPE type, ENUM_SYMBOL_INFO_DOUBLE price_type)
       {
-         PrintFormat("Close #%I64d %s %s",position_ticket,position_symbol,EnumToString(type));
-         for(int j=0; j<try; j++)
+         MqlTradeRequest request = {};
+         request.action = TRADE_ACTION_DEAL;
+         request.symbol = _Symbol;
+         request.volume = volume;
+         request.type = type;
+         request.type_filling = ORDER_FILLING_IOC;
+         request.price = SymbolInfoDouble(_Symbol, price_type);
+         request.deviation = deviation;
+         request.magic = magic;
+         
+         return request;
+      }
+      
+      MqlTradeRequest setCloseRequest(ulong ticket_pos, string symbol_pos, double volume_pos)
+      {
+         MqlTradeRequest request = {};
+         request.action = TRADE_ACTION_DEAL;
+         request.position = ticket_pos;
+         request.symbol = symbol_pos;
+         request.volume = volume_pos;
+         request.deviation = deviation;
+         request.magic = magic;
+         
+         return request;
+      }
+      
+      void sendingOrder(MqlTradeRequest &request, MqlTradeResult &result, ENUM_SYMBOL_INFO_DOUBLE price_type)
+      {
+         if(reorder_try < 65535)
          {
-            if(!OrderSend(request, result))
+            for(int i=0; i<reorder_try; i++)
             {
-               PrintFormat("OrderSend error %d", GetLastError());
-               Print("retcode: ", result.retcode);
-               if(request.type == ORDER_TYPE_SELL)
-                  request.price = SymbolInfoDouble(position_symbol, SYMBOL_BID);
-               else if(request.type == ORDER_TYPE_BUY)
-                  request.price = SymbolInfoDouble(position_symbol, SYMBOL_ASK);
+               if(!OrderSend(request, result))
+               {
+                  PrintFormat("OrderSend error: %d, retcode: %d", GetLastError(), result.retcode);
+                  request.price = SymbolInfoDouble(_Symbol, price_type);
+               }
+               else
+               {
+                  PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+                  break;
+               }   
             }
-            else
+         }
+         else // reorder_try == 65535
+         {   
+            while(!OrderSend(request, result))
             {
-               PrintFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);   
-               break;
-            }   
-         }
-         /*while(!OrderSend(request, result))
-         {
-            PrintFormat("OrderSend error %d", GetLastError());
-            Print("retcode: ", result.retcode);
-            if(request.type == ORDER_TYPE_SELL)
-               request.price = SymbolInfoDouble(position_symbol, SYMBOL_BID);
-            else if(request.type == ORDER_TYPE_BUY)
-               request.price = SymbolInfoDouble(position_symbol, SYMBOL_ASK);
-         }
-         PrintFormat("retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order); */
-      }
-   }
-   return type_int; 
-}
-
-
-void buy()
-{
-   int type_int = closePosition(POSITION_TYPE_SELL);
-   
-   
-   if(type_int == 0)
-   {
-      PrintFormat("Buying: %s", _Symbol);
-      string target = _Symbol;
-      MqlTradeRequest request = {};
-      MqlTradeResult result = {};
-      MqlTradeCheckResult ch_result = {0};
-      request.action = TRADE_ACTION_DEAL;
-      request.symbol = target;
-      request.volume = 1;
-      request.type = ORDER_TYPE_BUY;
-      request.type_filling = ORDER_FILLING_IOC;
-      request.price = SymbolInfoDouble(target, SYMBOL_ASK);
-      request.deviation = deviation;
-      request.magic = 17236;
-      if(OrderCheck(request, ch_result))
-      {
-         Print("Enough money!");
-      }
-      else
-      {
-         Print("Can't buy, no enough money!");
-         PrintFormat("OrderSend error %d", GetLastError());
-      }
-      
-      for(int j=0; j<try; j++)
-      {
-         if(!OrderSend(request, result))
-         {
-            PrintFormat("OrderSend error %d", GetLastError());
-            Print("retcode: ", result.retcode);
-            request.price = SymbolInfoDouble(target, SYMBOL_ASK);
-         }
-         else
-         {
+               PrintFormat("OrderSend error: %d, retcode: %d", GetLastError(), result.retcode);
+               request.price = SymbolInfoDouble(_Symbol, price_type);
+            }
             PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-            break;
-         }   
-      }
-      /*while(!OrderSend(request, result))
-      {
-         PrintFormat("OrderSend error %d", GetLastError());
-         Print("retcode: ", result.retcode);
-         request.price = SymbolInfoDouble(target, SYMBOL_ASK);
-      }
-      PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);*/
-    }
-    else if(type_int == 1)
-      PrintFormat("Trend same, do nothing in this peroid!");
-    else if(type_int == 2)
-      PrintFormat("Close the sell position!");   
-}
-
-
-void sell()
-{
-   int type_int = closePosition(POSITION_TYPE_BUY);
-   if(type_int == 0)
-   {
-      PrintFormat("Selling: %s", _Symbol);
-      string target = _Symbol;
-      MqlTradeRequest request = {};
-      MqlTradeResult result = {};
-      MqlTradeCheckResult ch_result = {0};
-      request.action = TRADE_ACTION_DEAL;
-      request.symbol = target;
-      request.volume = 1;
-      request.type = ORDER_TYPE_SELL;
-      request.type_filling = ORDER_FILLING_IOC;
-      request.price = SymbolInfoDouble(target, SYMBOL_BID);
-      request.deviation = deviation;
-      request.magic = 17236;
-      if(OrderCheck(request, ch_result))
-      {
-         Print("Enough money!");
-      }
-      else
-      {
-         Print("Can't buy, no enough money!");
-         PrintFormat("OrderSend error %d", GetLastError());
+         }
       }
       
-      for(int j=0; j<try; j++)
+   public:
+      // type_int = 0 -> no position
+      // type_int = 1 -> POSITION_TYPE_BUY
+      // type_int = 2 -> POSITION_TYPE_SELL
+      int closePosition(ENUM_POSITION_TYPE tg_type)
       {
-         if(!OrderSend(request, result))
+         int type_int = 0;
+         int total = PositionsTotal();
+         Print("total: ", total);
+         if(total == 0)
+            return type_int;
+         
+         for(int i = total-1; i>=0; i--)
          {
-            PrintFormat("OrderSend error %d", GetLastError());
-            Print("retcode: ", result.retcode);
-            request.price = SymbolInfoDouble(target, SYMBOL_BID);
+            ulong ticket_pos=PositionGetTicket(i);
+            string symbol_pos = PositionGetString(POSITION_SYMBOL);
+            int digits = (int)SymbolInfoInteger(symbol_pos, SYMBOL_DIGITS);
+            ulong magic_pos = PositionGetInteger(POSITION_MAGIC);
+            double volume_pos = PositionGetDouble(POSITION_VOLUME);
+            double sl_pos = PositionGetDouble(POSITION_SL);
+            double tp_pos = PositionGetDouble(POSITION_TP);
+            ENUM_POSITION_TYPE type_pos = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+            PrintFormat("#%I64u %s  %s  volume: %.2f  price: %s  sl: %s  tp: %s  [%I64d]",
+                        ticket_pos,
+                        symbol_pos,
+                        EnumToString(type_pos),
+                        volume_pos,
+                        DoubleToString(PositionGetDouble(POSITION_PRICE_OPEN),digits),
+                        DoubleToString(sl_pos,digits),
+                        DoubleToString(tp_pos,digits),
+                        magic_pos);
+
+            MqlTradeRequest request = setCloseRequest(ticket_pos, symbol_pos, volume_pos);
+            MqlTradeResult result = {};
+
+            if(type_pos == POSITION_TYPE_BUY)
+            {
+               type_int = 1;
+               request.price = SymbolInfoDouble(symbol_pos, SYMBOL_BID);
+               request.type = ORDER_TYPE_SELL;
+            }
+            else if(type_pos == POSITION_TYPE_SELL)
+            {
+               type_int = 2;
+               request.price = SymbolInfoDouble(symbol_pos, SYMBOL_ASK);
+               request.type = ORDER_TYPE_BUY;    
+            }
+            
+            if(type_pos == tg_type)
+            {
+               PrintFormat("Closing #%I64d %s %s : ",ticket_pos, symbol_pos, EnumToString(type_pos));
+               if(request.type == ORDER_TYPE_BUY)
+                  sendingOrder(request, result, SYMBOL_ASK);
+               else if(request.type == ORDER_TYPE_SELL)
+                  sendingOrder(request, result, SYMBOL_BID);
+            }
          }
-         else
-         {
-            PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-            break;
-         }   
+         return type_int; 
       }
-      /*while(!OrderSend(request, result))
+      
+      
+      void buy()
       {
-         PrintFormat("OrderSend error %d", GetLastError());
-         Print("retcode: ", result.retcode);
-         request.price = SymbolInfoDouble(target, SYMBOL_BID);
+         int type_int = closePosition(POSITION_TYPE_SELL);
+         
+         if(type_int == 0)
+         {
+            PrintFormat("Buying: %s", _Symbol);
+            string target = _Symbol;
+            MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
+            MqlTradeResult result = {};
+            sendingOrder(request, result, SYMBOL_ASK);
+          }
+          else if(type_int == 1)
+            PrintFormat("Trend same, do nothing in this peroid!");
+          else if(type_int == 2)
+            PrintFormat("Close the sell position!");   
       }
-      PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);*/
-   }
-   else if(type_int == 2)
-      PrintFormat("Trend same, do nothing in this peroid!");
-   else if(type_int == 1)
-      PrintFormat("Close the buy position!");
-}
+      
+      
+      void sell()
+      {
+         int type_int = closePosition(POSITION_TYPE_BUY);
+         
+         if(type_int == 0)
+         {
+            PrintFormat("Selling: %s", _Symbol);
+            MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
+            MqlTradeResult result = {};
+            sendingOrder(request, result, SYMBOL_BID);
+         }
+         else if(type_int == 2)
+            PrintFormat("Trend same, do nothing in this peroid!");
+         else if(type_int == 1)
+            PrintFormat("Close the buy position!");
+      }
+};

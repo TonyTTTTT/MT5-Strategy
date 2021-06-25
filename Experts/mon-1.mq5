@@ -6,7 +6,7 @@
 #property copyright "Copyright 2021, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
 #property version   "1.00"
-#include <send-transaction-close-order-same-trend.mqh>
+#include <send-transaction-close.mqh>
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -145,12 +145,14 @@ void OnTimer()
    {
       
       PrintFormat("last_close > target K bar's high , Buy");
-      buy();
+      OrderSender order_sender(1);
+      order_sender.buy();
    }   
    else if(last_K==1 && last_close < rates[tg_K_idx].low)
    {
       PrintFormat("last_close < target K bar's low, Sell");
-      sell();   
+      OrderSender order_sender(1);
+      order_sender.sell();   
    }
    else
    {
