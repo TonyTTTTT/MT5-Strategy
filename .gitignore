@@ -1,2 +1,10 @@
 Logs
+
+// all the executable file
 *.ex5
+
+
+*.ini
+
+// all charts
+*.chr
