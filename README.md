@@ -18,3 +18,7 @@
 ## 2021/6/25
 - Refactor EA mon-1's code
 
+## 2021/6/26
+- set tp(take profit) and sl(stop loss)
+- try to get the history deals data, but fail
+
