@@ -14,6 +14,7 @@
 int OnInit()
   {
 //---
+   //ChartSetSymbolPeriod(0,"XAUUSD",_Period);
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
    Print("current peroid: ", PeriodSeconds());
