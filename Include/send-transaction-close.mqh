@@ -104,8 +104,16 @@ class OrderSender
                }
                else
                {
-                  PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-                  break;
+                  if(price_type == SYMBOL_ASK)
+                  {
+                     PrintFormat("Sucess Buy! retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+                     break;
+                  }
+                  else //price_type == SYMBOL_BID
+                  {
+                     PrintFormat("Sucess Sell! retcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+                     break; 
+                  }   
                }   
             }
          }
@@ -120,6 +128,23 @@ class OrderSender
          }
       }
       
+      void getLastDealType()
+      {
+         int deals = HistoryOrdersTotal();
+         PrintFormat("There is %d orders in history", deals);
+         ulong ticket_deal;
+         long type_deal;
+         for(int i = deals-1; i>=0; i--)
+         {
+            ticket_deal = HistoryOrderGetTicket(i);
+            type_deal = HistoryOrderGetInteger(ticket_deal, ORDER_TYPE);
+            PrintFormat("order: %d, type: %d", i, type_deal);
+         }
+         
+         
+         //return type_last_deal;
+      }
+      
    public:
       // type_int = 0 -> no position
       // type_int = 1 -> POSITION_TYPE_BUY
@@ -128,7 +153,7 @@ class OrderSender
       {
          int type_int = 0;
          int total = PositionsTotal();
-         Print("total: ", total);
+         Print("opening deals total: ", total);
          if(total == 0)
             return type_int;
          
@@ -187,6 +212,8 @@ class OrderSender
          
          if(type_int == 0)
          {
+            getLastDealType();
+            //Print("last deal type: ", type_last_deal);
             PrintFormat("Buying: %s", _Symbol);
             string target = _Symbol;
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
@@ -206,6 +233,8 @@ class OrderSender
          
          if(type_int == 0)
          {
+            getLastDealType();
+            //Print("last deal type: ", type_last_deal);
             PrintFormat("Selling: %s", _Symbol);
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
             MqlTradeResult result = {};
