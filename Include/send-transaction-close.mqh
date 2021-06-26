@@ -62,9 +62,19 @@ class OrderSender
          request.magic = magic;
          double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
          int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
-         request.tp = NormalizeDouble(request.price + profit_offset * point, digits);
-         request.sl = NormalizeDouble(request.price - profit_offset * point, digits);
-         //SymbolInfoInteger()
+         if(type == ORDER_TYPE_BUY)
+         {
+            request.tp = NormalizeDouble(request.price + profit_offset * point, digits);
+            request.sl = NormalizeDouble(request.price - profit_offset * point, digits);
+         }
+         else // type == ORDER_TYPE_SELL
+         {
+            request.tp = NormalizeDouble(request.price - profit_offset * point, digits);
+            request.sl = NormalizeDouble(request.price + profit_offset * point, digits);           
+         }   
+         PrintFormat("price: %f, tp: %f, sl: %f",
+                     request.price, request.tp, request.sl);
+         
          return request;
       }
       
