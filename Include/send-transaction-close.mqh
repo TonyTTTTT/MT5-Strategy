@@ -39,6 +39,7 @@ class OrderSender
          reorder_try = reorder_try_param;
          volume = 1;
          magic = 17236;
+         profit_offset = 1000;
       }
       
    private:
@@ -46,6 +47,7 @@ class OrderSender
       ushort reorder_try;
       double volume;
       ulong magic;
+      ushort profit_offset;
    private:
       MqlTradeRequest setOrderRequest(ENUM_ORDER_TYPE type, ENUM_SYMBOL_INFO_DOUBLE price_type)
       {
@@ -58,7 +60,11 @@ class OrderSender
          request.price = SymbolInfoDouble(_Symbol, price_type);
          request.deviation = deviation;
          request.magic = magic;
-         
+         double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+         int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+         request.tp = NormalizeDouble(request.price + profit_offset * point, digits);
+         request.sl = NormalizeDouble(request.price - profit_offset * point, digits);
+         //SymbolInfoInteger()
          return request;
       }
       

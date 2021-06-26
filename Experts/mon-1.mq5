@@ -14,9 +14,13 @@
 int OnInit()
   {
 //---
-   //ChartSetSymbolPeriod(0,"XAUUSD",_Period);
+   double point=SymbolInfoDouble(_Symbol,SYMBOL_POINT);
+   int    digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
+   
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
+   Print("point value: ", point);
+   Print("digits: ", digits);
    Print("current peroid: ", PeriodSeconds());
    EventSetTimer(PeriodSeconds());
    OnTimer();
