@@ -127,18 +127,35 @@ class OrderSender
             PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
          }
       }
-      
+
+   string getOrderType(long type) 
+     { 
+      string str_type="unknown operation"; 
+      switch(type) 
+        { 
+         case (ORDER_TYPE_BUY):            return("buy"); 
+         case (ORDER_TYPE_SELL):           return("sell"); 
+         case (ORDER_TYPE_BUY_LIMIT):      return("buy limit"); 
+         case (ORDER_TYPE_SELL_LIMIT):     return("sell limit"); 
+         case (ORDER_TYPE_BUY_STOP):       return("buy stop"); 
+         case (ORDER_TYPE_SELL_STOP):      return("sell stop"); 
+         case (ORDER_TYPE_BUY_STOP_LIMIT): return("buy stop limit"); 
+         case (ORDER_TYPE_SELL_STOP_LIMIT):return("sell stop limit"); 
+        } 
+      return(str_type); 
+     }
+
       void getLastDealType()
       {
          int deals = HistoryOrdersTotal();
          PrintFormat("There is %d orders in history", deals);
          ulong ticket_deal;
-         long type_deal;
+         string type_deal;
          for(int i = deals-1; i>=0; i--)
          {
             ticket_deal = HistoryOrderGetTicket(i);
-            type_deal = HistoryOrderGetInteger(ticket_deal, ORDER_TYPE);
-            PrintFormat("order: %d, type: %d", i, type_deal);
+            type_deal = getOrderType(HistoryOrderGetInteger(ticket_deal, ORDER_TYPE));
+            PrintFormat("order: %d, type: %s", i, type_deal);
          }
          
          
