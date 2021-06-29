@@ -274,6 +274,7 @@ class OrderSender
          if(type_int == 0)
          {
             string last_type = getLastOrderType();
+            PrintFormat("last_type: %s", last_type);
             if(last_type == "buy" || last_type == "null")
             {
                //Print("last deal type: ", type_last_deal);
