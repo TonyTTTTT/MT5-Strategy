@@ -159,15 +159,18 @@ class OrderSender
          {
             int orders_total = HistoryOrdersTotal();
             PrintFormat("There is %d orders in history", orders_total);
-            ulong ticket_order = HistoryOrderGetTicket(orders_total-2);
-            type_order = getOrderType(HistoryOrderGetInteger(ticket_order, ORDER_TYPE));
-            
-            /*for(int i = orders_total-1; i>=0; i--)
+            if(orders_total > 0)
             {
-               ticket_deal = HistoryOrderGetTicket(i);
-               type_deal = getOrderType(HistoryOrderGetInteger(ticket_deal, ORDER_TYPE));
-               PrintFormat("order: %d, type: %s", i, type_deal);
-            }*/
+               ulong ticket_order = HistoryOrderGetTicket(orders_total-2);
+               type_order = getOrderType(HistoryOrderGetInteger(ticket_order, ORDER_TYPE));
+            
+               /*for(int i = orders_total-1; i>=0; i--)
+               {
+                  ticket_deal = HistoryOrderGetTicket(i);
+                  type_deal = getOrderType(HistoryOrderGetInteger(ticket_deal, ORDER_TYPE));
+                  PrintFormat("order: %d, type: %s", i, type_deal);
+               }*/
+            }
          }
          else
             PrintFormat("Fail to get history");   
@@ -244,7 +247,8 @@ class OrderSender
          if(type_int == 0)
          {
             string last_type = getLastOrderType();
-            if(last_type == "sell")
+            PrintFormat("last_type: %s", last_type);
+            if(last_type == "sell" || last_type == "null")
             {
                //Print("last deal type: ", type_last_deal);
                PrintFormat("Buying: %s", _Symbol);
@@ -270,7 +274,7 @@ class OrderSender
          if(type_int == 0)
          {
             string last_type = getLastOrderType();
-            if(last_type == "buy")
+            if(last_type == "buy" || last_type == "null")
             {
                //Print("last deal type: ", type_last_deal);
                PrintFormat("Selling: %s", _Symbol);
