@@ -33,13 +33,14 @@ class OrderSender
 {
    public:
       // constructor
-      void OrderSender(ushort reorder_try_param)
+      void OrderSender(ushort reorder_try_param, datetime start_time_param)
       {
          deviation = 5;
          reorder_try = reorder_try_param;
          volume = 1;
          magic = 17236;
          profit_offset = 1000;
+         start_time = start_time_param;
       }
       
    private:
@@ -48,6 +49,7 @@ class OrderSender
       double volume;
       ulong magic;
       ushort profit_offset;
+      datetime start_time;
    private:
       MqlTradeRequest setOrderRequest(ENUM_ORDER_TYPE type, ENUM_SYMBOL_INFO_DOUBLE price_type)
       {
@@ -145,21 +147,33 @@ class OrderSender
       return(str_type); 
      }
 
-      void getLastDealType()
+      string getLastOrderType()
       {
-         int deals = HistoryOrdersTotal();
-         PrintFormat("There is %d orders in history", deals);
-         ulong ticket_deal;
-         string type_deal;
-         for(int i = deals-1; i>=0; i--)
+         datetime now_time = TimeCurrent();
+         PrintFormat("start_time: %s", TimeToString(start_time));
+         PrintFormat("now_time: %s", TimeToString(now_time));
+         datetime end = __DATETIME__;
+         bool suc_get_his_ord = HistorySelect(start_time, now_time);
+         string type_order = "null";
+         if(suc_get_his_ord)
          {
-            ticket_deal = HistoryOrderGetTicket(i);
-            type_deal = getOrderType(HistoryOrderGetInteger(ticket_deal, ORDER_TYPE));
-            PrintFormat("order: %d, type: %s", i, type_deal);
+            int orders_total = HistoryOrdersTotal();
+            PrintFormat("There is %d orders in history", orders_total);
+            ulong ticket_order = HistoryOrderGetTicket(orders_total-2);
+            type_order = getOrderType(HistoryOrderGetInteger(ticket_order, ORDER_TYPE));
+            
+            /*for(int i = orders_total-1; i>=0; i--)
+            {
+               ticket_deal = HistoryOrderGetTicket(i);
+               type_deal = getOrderType(HistoryOrderGetInteger(ticket_deal, ORDER_TYPE));
+               PrintFormat("order: %d, type: %s", i, type_deal);
+            }*/
          }
+         else
+            PrintFormat("Fail to get history");   
          
          
-         //return type_last_deal;
+         return type_order;
       }
       
    public:
@@ -229,16 +243,21 @@ class OrderSender
          
          if(type_int == 0)
          {
-            getLastDealType();
-            //Print("last deal type: ", type_last_deal);
-            PrintFormat("Buying: %s", _Symbol);
-            string target = _Symbol;
-            MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
-            MqlTradeResult result = {};
-            sendingOrder(request, result, SYMBOL_ASK);
+            string last_type = getLastOrderType();
+            if(last_type == "sell")
+            {
+               //Print("last deal type: ", type_last_deal);
+               PrintFormat("Buying: %s", _Symbol);
+               string target = _Symbol;
+               MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
+               MqlTradeResult result = {};
+               sendingOrder(request, result, SYMBOL_ASK);
+            }
+            else
+               PrintFormat("Already tp or sl in same trend(Buy), do nothing in this peroid!");
           }
           else if(type_int == 1)
-            PrintFormat("Trend same, do nothing in this peroid!");
+            PrintFormat("Trend same(Buy), and there is opening position, do nothing in this peroid!");
           else if(type_int == 2)
             PrintFormat("Close the sell position!");   
       }
@@ -250,15 +269,20 @@ class OrderSender
          
          if(type_int == 0)
          {
-            getLastDealType();
-            //Print("last deal type: ", type_last_deal);
-            PrintFormat("Selling: %s", _Symbol);
-            MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
-            MqlTradeResult result = {};
-            sendingOrder(request, result, SYMBOL_BID);
+            string last_type = getLastOrderType();
+            if(last_type == "buy")
+            {
+               //Print("last deal type: ", type_last_deal);
+               PrintFormat("Selling: %s", _Symbol);
+               MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
+               MqlTradeResult result = {};
+               sendingOrder(request, result, SYMBOL_BID);
+            }
+            else
+               PrintFormat("Already tp or sl in same trend(Sell), do nothing in this peroid!");
          }
          else if(type_int == 2)
-            PrintFormat("Trend same, do nothing in this peroid!");
+            PrintFormat("Trend same(Sell), and there is opening postion, do nothing in this peroid!");
          else if(type_int == 1)
             PrintFormat("Close the buy position!");
       }

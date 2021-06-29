@@ -11,17 +11,21 @@
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
+
+ushort reorder_try = 1;
+datetime start_time;
 int OnInit()
   {
 //---
    double point=SymbolInfoDouble(_Symbol,SYMBOL_POINT);
    int    digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
-   
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
    Print("point value: ", point);
    Print("digits: ", digits);
    Print("current peroid: ", PeriodSeconds());
+   start_time = TimeCurrent();
+   Print("start time: ", TimeToString(start_time));
    EventSetTimer(PeriodSeconds());
    OnTimer();
 //---
@@ -48,6 +52,7 @@ void OnTick()
 void OnTimer()
 {
    Print("execute OnTimer!");
+   
    MonOneInd mon_one_ind;
    mon_one_ind.findLastK();
    mon_one_ind.findLastConverseNTarget();
@@ -60,13 +65,13 @@ void OnTimer()
    {
       
       PrintFormat("last_close > target K bar's high , Buy");
-      OrderSender order_sender(1);
+      OrderSender order_sender(reorder_try, start_time);
       order_sender.buy();
    }   
    else if(last_K == 1 && last_close < target_low)
    {
       PrintFormat("last_close < target K bar's low, Sell");
-      OrderSender order_sender(1);
+      OrderSender order_sender(reorder_try, start_time);
       order_sender.sell();   
    }
    else
