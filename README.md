@@ -22,3 +22,7 @@
 - set tp(take profit) and sl(stop loss)
 - try to get the history deals data, but fail
 
+## 2021/6/29
+- success get history order, and add new condition
+- don't order if already tp or sl in same trend
+
