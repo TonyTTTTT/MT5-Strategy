@@ -1,9 +1,5 @@
 Logs
 
-# all the executable file
-*.ex5
-
-
 *.ini
 
 # all charts
@@ -11,4 +7,5 @@ Logs
 
 *.wnd
 
+# customized setting
 Profiles
