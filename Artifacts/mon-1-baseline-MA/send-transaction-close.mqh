@@ -185,7 +185,7 @@ class OrderSender
          if(type_int == 0)
          {
             double ma = getMA();
-            if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > ma)
+            if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > ma || ma == -2)
             {   
                PrintFormat("Buying: %s", _Symbol);
                string target = _Symbol;
@@ -193,6 +193,8 @@ class OrderSender
                MqlTradeResult result = {};
                sendingOrder(request, result, SYMBOL_ASK);
             }
+            else if(ma == -1)
+               Print("error occur when get ma, don't order");
             else
                Print("current buy price < MA, don't buy");
           }
@@ -210,13 +212,15 @@ class OrderSender
          if(type_int == 0)
          {
             double ma = getMA();
-            if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma)
+            if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma || ma == -2)
             {    
                PrintFormat("Selling: %s", _Symbol);
                MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
                MqlTradeResult result = {};
                sendingOrder(request, result, SYMBOL_BID);
             }
+            else if(ma == -1)
+               Print("error occur when get ma, don't order");
             else
                Print("current sell price > MA, don't sell");
          }
