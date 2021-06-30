@@ -39,7 +39,7 @@ class OrderSender
          reorder_try = reorder_try_param;
          volume = 1;
          magic = 17236;
-         profit_offset = 1000;
+         profit_offset = 3000;
          start_time = start_time_param;
       }
       
