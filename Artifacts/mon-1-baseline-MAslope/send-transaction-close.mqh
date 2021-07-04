@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2021, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
-#include "MACalculator.mqh"
+#include  "MACalculator.mqh"
 //+------------------------------------------------------------------+
 //| defines                                                          |
 //+------------------------------------------------------------------+
@@ -33,8 +33,6 @@ input ulong magic_param = 17236;
 input ushort reorder_try_param = 1;
 input double volume_param = 1;
 input ushort deviation_param = 5;
-input ushort tp_point_param = 4500;
-input ushort sl_point_param = 1500;
 
 class OrderSender
 {
@@ -46,17 +44,13 @@ class OrderSender
          reorder_try = reorder_try_param;
          volume = volume_param;
          magic = magic_param;
-         tp_point = tp_point_param;
-         sl_point = sl_point_param;
       }
       
    private:
-      int deviation;
+      ushort deviation;
       ushort reorder_try;
       double volume;
       ulong magic;
-      ushort tp_point;
-      ushort sl_point;
    private:
       MqlTradeRequest setOrderRequest(ENUM_ORDER_TYPE type, ENUM_SYMBOL_INFO_DOUBLE price_type)
       {
@@ -69,20 +63,6 @@ class OrderSender
          request.price = SymbolInfoDouble(_Symbol, price_type);
          request.deviation = deviation;
          request.magic = magic;
-         double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
-         int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
-         if(type == ORDER_TYPE_BUY)
-         {
-            request.tp = NormalizeDouble(request.price + tp_point * point, digits);
-            request.sl = NormalizeDouble(request.price - sl_point * point, digits);
-         }
-         else // type == ORDER_TYPE_SELL
-         {
-            request.tp = NormalizeDouble(request.price - tp_point * point, digits);
-            request.sl = NormalizeDouble(request.price + sl_point * point, digits);           
-         }   
-         PrintFormat("price: %f, tp: %f, sl: %f",
-                     request.price, request.tp, request.sl);
          
          return request;
       }
@@ -128,20 +108,13 @@ class OrderSender
             PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
          }
       }
-  
+      
       double getMA()
       {
          MACalculator ma_calculator();
          double ma = ma_calculator.getSimpleMA();
          PrintFormat("MA: %f", ma);
          return ma;
-      }
-      int getPositionTotal()
-      {
-         int total = PositionsTotal();
-         PrintFormat("total: %d", total);
-         
-         return total;
       }
       
    public:
@@ -205,40 +178,41 @@ class OrderSender
       }
       
       
-      void buy()
+      void buy(double ma_last)
       {
-         int postion_total = getPositionTotal();
-         
-         if(postion_total == 0)
+         int type_int = closePosition(POSITION_TYPE_SELL);
+         PrintFormat("last MA: %f", ma_last);
+         double ma = getMA();
+         if(type_int == 0)
          {
-            double ma = getMA();
-            
-            if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > ma || ma == -2)
-            {
+            if(ma > ma_last || ma == -2)
+            {   
                PrintFormat("Buying: %s", _Symbol);
                string target = _Symbol;
                MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
                MqlTradeResult result = {};
                sendingOrder(request, result, SYMBOL_ASK);
-            }   
+            }
             else if(ma == -1)
                Print("error occur when get ma, don't order");
             else
-               Print("current buy price < MA, don't buy");
+               Print("current MA < last MA, don't buy");
           }
-          else // postion_total != 0
-            Print("There is position, don't order");   
+          else if(type_int == 1)
+            PrintFormat("Trend same, do nothing in this peroid!");
+          else if(type_int == 2)
+            PrintFormat("Close the sell position!");   
       }
       
       
-      void sell()
+      void sell(double ma_last)
       {
-         int postion_total = getPositionTotal();
-         
-         if(postion_total == 0)
+         int type_int = closePosition(POSITION_TYPE_BUY);
+         PrintFormat("last MA: %f", ma_last);
+         double ma = getMA();
+         if(type_int == 0)
          {
-            double ma = getMA();
-            if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma || ma == -2)
+            if(ma < ma_last || ma == -2)
             {    
                PrintFormat("Selling: %s", _Symbol);
                MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
@@ -248,9 +222,11 @@ class OrderSender
             else if(ma == -1)
                Print("error occur when get ma, don't order");
             else
-               Print("current sell price > MA, don't sell");
+               Print("current MA > last MA, don't sell");
          }
-         else // postion_total != 0
-            Print("There is position, don't order");   
+         else if(type_int == 2)
+            PrintFormat("Trend same, do nothing in this peroid!");
+         else if(type_int == 1)
+            PrintFormat("Close the buy position!");
       }
 };

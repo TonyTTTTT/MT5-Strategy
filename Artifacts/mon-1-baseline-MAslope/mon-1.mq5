@@ -11,16 +11,15 @@
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
+
+double ma_last;
 int OnInit()
   {
 //---
-   double point=SymbolInfoDouble(_Symbol,SYMBOL_POINT);
-   int    digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
-   
+   //ChartSetSymbolPeriod(0,"XAUUSD",_Period);
+   ma_last = -1;
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
-   Print("point value: ", point);
-   Print("digits: ", digits);
    Print("current peroid: ", PeriodSeconds());
    EventSetTimer(PeriodSeconds());
    OnTimer();
@@ -60,18 +59,20 @@ void OnTimer()
    {
       
       PrintFormat("last_close > target K bar's high , Buy");
-      OrderSender order_sender(1);
-      order_sender.buy();
+      OrderSender order_sender();
+      order_sender.buy(ma_last);
    }   
    else if(last_K == 1 && last_close < target_low)
    {
       PrintFormat("last_close < target K bar's low, Sell");
-      OrderSender order_sender(1);
-      order_sender.sell();   
+      OrderSender order_sender();
+      order_sender.sell(ma_last);   
    }
    else
    {
       PrintFormat("Didn't meet the strategy, do nothing in this peroid!");
    }
    Print("====================================================");
+   MACalculator ma_calculator();
+   ma_last = ma_calculator.getSimpleMA();
 }

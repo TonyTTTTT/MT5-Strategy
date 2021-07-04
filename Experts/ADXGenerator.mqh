@@ -43,8 +43,12 @@ class ADXGenerator
       double nDM_avg;
       double pDI_avg;
       double nDI_avg;
+      double pDI_now;
+      double nDI_now;
       double TR_avg;
-      double ;
+      double pDM_ary[];
+      double nDM_ary[];
+      double TR_ary[];
       MqlRates rates[];
    private:
       void getRates()
@@ -59,8 +63,6 @@ class ADXGenerator
       
       void calDMAvg()
       {
-         double pDM_ary[];
-         double nDM_ary[];
          ArrayResize(pDM_ary, ADX_window);
          ArrayResize(nDM_ary, ADX_window);
          double tmp_rise;
@@ -95,7 +97,6 @@ class ADXGenerator
       
       void calTRAvg()
       {
-         double TR_ary[];
          ArrayResize(TR_ary, ADX_window);
          TR_avg = 0;
          for(int i=0; i<ADX_window; i++)
@@ -110,6 +111,8 @@ class ADXGenerator
       {
          pDI_avg = (pDM_avg/TR_avg) * 100;
          nDI_avg = (nDM_avg/TR_avg) * 100;
+         pDI_now = (pDM_ary[ADX_window-1] / TR_ary[ADX_window-1]) * 100;
+         nDI_now = (nDM_ary[ADX_window-1] / TR_ary[ADX_window-1]) * 100;
       }
       
       void calADX()
@@ -119,12 +122,12 @@ class ADXGenerator
    public:
       double getpDI()
       {
-         return pDI_avg;
+         return pDI_now;
       }
       
       double getnDI()
       {
-         return nDI_avg;
+         return nDI_now;
       }
       
       double getADX()
