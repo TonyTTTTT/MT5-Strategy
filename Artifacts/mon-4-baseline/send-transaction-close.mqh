@@ -33,8 +33,8 @@ input ulong magic_param = 17236;
 input ushort reorder_try_param = 1;
 input double volume_param = 1;
 input ushort deviation_param = 5;
-input ushort tp_point_param = 3000;
-input ushort sl_point_param = 3000;
+input ushort tp_point_param = 4500;
+input ushort sl_point_param = 1500;
 
 class OrderSender
 {
@@ -213,7 +213,7 @@ class OrderSender
          {
             double ma = getMA();
             
-            if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) < ma || ma == -2)
+            if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > ma || ma == -2)
             {
                PrintFormat("Buying: %s", _Symbol);
                string target = _Symbol;
@@ -224,7 +224,7 @@ class OrderSender
             else if(ma == -1)
                Print("error occur when get ma, don't order");
             else
-               Print("current buy price > MA, don't buy");
+               Print("current buy price < MA, don't buy");
           }
           else // postion_total != 0
             Print("There is position, don't order");   
@@ -238,7 +238,7 @@ class OrderSender
          if(postion_total == 0)
          {
             double ma = getMA();
-            if(SymbolInfoDouble(_Symbol, SYMBOL_BID) > ma || ma == -2)
+            if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma || ma == -2)
             {    
                PrintFormat("Selling: %s", _Symbol);
                MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
@@ -248,7 +248,7 @@ class OrderSender
             else if(ma == -1)
                Print("error occur when get ma, don't order");
             else
-               Print("current sell price < MA, don't sell");
+               Print("current sell price > MA, don't sell");
          }
          else // postion_total != 0
             Print("There is position, don't order");   

@@ -12,8 +12,6 @@
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 
-
-
 int ADX_handle;
 double pDI[];
 double nDI[];
@@ -70,15 +68,15 @@ void OnTimer()
    if(pDI[1] > nDI[1] && pDI[0] < nDI[0])
    {
       
-      PrintFormat("pDI > nDI, Sell");
+      PrintFormat("pDI > nDI, Buy");
       OrderSender order_sender();
-      order_sender.sell();
+      order_sender.buy();
    }   
    else if(nDI[1] > pDI[1] && nDI[0] < pDI[0])
    {
-      PrintFormat("nDI > pDI, Buy");
+      PrintFormat("nDI > pDI, Sell");
       OrderSender order_sender();
-      order_sender.buy();   
+      order_sender.sell();   
    }
    else
    {
