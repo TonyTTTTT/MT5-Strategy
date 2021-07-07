@@ -26,3 +26,9 @@
 - success get history order, and add new condition
 - don't order if already tp or sl in same trend
 
+## 2021/7/5
+- complete the baseline of mon-4
+
+## 2021/7/7
+- new version that inverse the logic of mon-4
+
