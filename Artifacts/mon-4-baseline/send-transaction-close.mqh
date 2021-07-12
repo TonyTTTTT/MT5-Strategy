@@ -111,11 +111,16 @@ class OrderSender
                   PrintFormat("OrderSend error: %d, retcode: %d", GetLastError(), result.retcode);
                   request.price = SymbolInfoDouble(_Symbol, price_type);
                }
-               else
+               else if(price_type == SYMBOL_ASK)
                {
                   PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
                   break;
-               }   
+               }
+               else if(price_type == SYMBOL_BID)
+               {
+                  PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+                  break;
+               }     
             }
          }
          else // reorder_try == 65535
@@ -125,7 +130,14 @@ class OrderSender
                PrintFormat("OrderSend error: %d, retcode: %d", GetLastError(), result.retcode);
                request.price = SymbolInfoDouble(_Symbol, price_type);
             }
-            PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+            if(price_type == SYMBOL_ASK)
+            {
+               PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+            }
+            else if(price_type == SYMBOL_BID)
+            {
+               PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
+            }   
          }
       }
   

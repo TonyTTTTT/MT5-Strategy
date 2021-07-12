@@ -7,16 +7,16 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 #include "send-transaction-close.mqh"
+#include "ADXGenerator.mqh"
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
-input ushort ADX_window_param = 14;
-input short MA_window_param = 300;
+
+
+
 int ADX_handle;
 double pDI[];
 double nDI[];
-int MA_handle;
-double MA[];
 int OnInit()
   {
 //---
@@ -24,8 +24,7 @@ int OnInit()
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
    Print("current peroid: ", PeriodSeconds());
-   ADX_handle = iADX(_Symbol, PERIOD_CURRENT, ADX_window_param);
-   MA_handle = iMA(_Symbol, PERIOD_CURRENT, MA_window_param, 0, MODE_SMA, PRICE_CLOSE);
+   ADX_handle = iADX(_Symbol, PERIOD_CURRENT, 14);
    EventSetTimer(PeriodSeconds());
    OnTimer();
 //---
@@ -53,56 +52,37 @@ void OnTimer()
 {
    Print("execute OnTimer!");
    
-   int pDI_num = CopyBuffer(ADX_handle, 1, 0, 3, pDI);
-   if(pDI_num != -1)
-      PrintFormat("pDI = %f, last pDI = %f", pDI[1], pDI[0]);
+   if(CopyBuffer(ADX_handle, 1, 0, 3, pDI) < 0)
+   {
+      Print("err occur when calling iADX pDI");
+   }
+   if(CopyBuffer(ADX_handle, 2, 0, 3, nDI) < 0)
+   {
+      Print("err occur when calling iADX for nDI");
+   }
+   PrintFormat("pDI = %f, last pDI = %f", pDI[1], pDI[0]);
+   PrintFormat("nDI = %f, last nDI = %f", nDI[1], nDI[0]);
+   /*ADXGenerator adx_generator();
    
-   int nDI_num = CopyBuffer(ADX_handle, 2, 0, 3, nDI);
-   if(nDI_num != -1)
-      PrintFormat("nDI = %f, last nDI = %f", nDI[1], nDI[0]);
-   
-   int MA_num = CopyBuffer(MA_handle, 0, 0, 3, MA);
-   if(MA_num != -1)
-      PrintFormat("MA = %f, last MA = %f", MA[1], MA[0]);
-   
-
+   double pDI_avg = adx_generator.getpDI();
+   double nDI_avg = adx_generator.getnDI();
+   PrintFormat("pDI_avg: %f, nDI_avg: %f", pDI_avg, nDI_avg);*/
    if(pDI[1] > nDI[1] && pDI[0] < nDI[0])
    {
-      PrintFormat("pDI > nDI");
-      if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > MA[1])
-      {
-         PrintFormat("ASK > MA, Buy");
-         OrderSender order_sender();
-         order_sender.buy();
-      }
-      else if(MA_num == -1)
-         Print("Error occur when calling iMA for MA, don't order");
-      else
-         Print("Buy price < MA, don't buy");   
+      
+      PrintFormat("pDI > nDI, Sell");
+      OrderSender order_sender();
+      order_sender.sell();
    }   
    else if(nDI[1] > pDI[1] && nDI[0] < pDI[0])
    {
-       PrintFormat("nDI > pDI");
-      if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < MA[1])
-      {
-         PrintFormat("BID < MA, Sell");
-         OrderSender order_sender();
-         order_sender.sell();   
-      }
-      else if(MA_num == -1)
-         Print("Error occur when calling iMA for MA, don't order");
-      else
-         Print("Sell price > MA, don't sell");   
+      PrintFormat("nDI > pDI, Buy");
+      OrderSender order_sender();
+      order_sender.buy();   
    }
-   else if(pDI_num == -1 || nDI_num == -1)
-   {
-      Print("Error occur when calling iADX for nDI or pDI, don't order");
-   }   
    else
    {
       PrintFormat("Didn't meet the strategy, do nothing in this peroid!");
    }
-   
-   
    Print("====================================================");
 }
