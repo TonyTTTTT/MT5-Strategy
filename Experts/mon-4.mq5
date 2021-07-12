@@ -12,6 +12,7 @@
 //+------------------------------------------------------------------+
 input ushort ADX_window_param = 14;
 input short MA_window_param = 300;
+input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 int ADX_handle;
 double pDI[];
 double nDI[];
@@ -24,9 +25,9 @@ int OnInit()
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
    Print("current peroid: ", PeriodSeconds());
-   ADX_handle = iADX(_Symbol, PERIOD_CURRENT, ADX_window_param);
-   MA_handle = iMA(_Symbol, PERIOD_CURRENT, MA_window_param, 0, MODE_SMA, PRICE_CLOSE);
-   EventSetTimer(PeriodSeconds());
+   ADX_handle = iADX(_Symbol, peroid_param, ADX_window_param);
+   MA_handle = iMA(_Symbol, peroid_param, MA_window_param, 0, MODE_SMA, PRICE_CLOSE);
+   EventSetTimer(PeriodSeconds(peroid_param));
    OnTimer();
 //---
    return(INIT_SUCCEEDED);
@@ -69,28 +70,30 @@ void OnTimer()
    if(pDI[1] > nDI[1] && pDI[0] < nDI[0])
    {
       PrintFormat("pDI > nDI");
+      
+      if(MA_num == -1)
+         Print("Error occur when calling iMA for MA, don't order");      
       if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > MA[1])
       {
          PrintFormat("ASK > MA, Buy");
          OrderSender order_sender();
          order_sender.buy();
       }
-      else if(MA_num == -1)
-         Print("Error occur when calling iMA for MA, don't order");
       else
          Print("Buy price < MA, don't buy");   
    }   
    else if(nDI[1] > pDI[1] && nDI[0] < pDI[0])
    {
-       PrintFormat("nDI > pDI");
-      if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < MA[1])
+      PrintFormat("nDI > pDI");
+      
+      if(MA_num == -1)
+         Print("Error occur when calling iMA for MA, don't order");
+      else if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < MA[1])
       {
          PrintFormat("BID < MA, Sell");
          OrderSender order_sender();
          order_sender.sell();   
       }
-      else if(MA_num == -1)
-         Print("Error occur when calling iMA for MA, don't order");
       else
          Print("Sell price > MA, don't sell");   
    }
