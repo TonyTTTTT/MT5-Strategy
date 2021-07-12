@@ -30,5 +30,8 @@
 - complete the baseline of mon-4
 
 ## 2021/7/7
-- new version that inverse the logic of mon-4
+- New version that inverse the logic of mon-4
+
+## 2021/7/12
+- Use iMA, discard MACalculator
 
