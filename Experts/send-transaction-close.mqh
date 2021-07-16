@@ -70,7 +70,7 @@ class OrderSender
          request.magic = magic;
          double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
          int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
-         if(type == ORDER_TYPE_BUY)
+         /*if(type == ORDER_TYPE_BUY)
          {
             request.tp = NormalizeDouble(request.price + tp_point * point, digits);
             request.sl = NormalizeDouble(request.price - sl_point * point, digits);
@@ -81,7 +81,7 @@ class OrderSender
             request.sl = NormalizeDouble(request.price + sl_point * point, digits);           
          }   
          PrintFormat("price: %f, tp: %f, sl: %f",
-                     request.price, request.tp, request.sl);
+                     request.price, request.tp, request.sl);*/
          
          return request;
       }
@@ -211,9 +211,9 @@ class OrderSender
       
       void buy()
       {
-         int postion_total = getPositionTotal();
+         int type_int = closePosition(POSITION_TYPE_SELL);
          
-         if(postion_total == 0)
+         if(type_int == 0)
          {
             PrintFormat("Buying: %s", _Symbol);
             string target = _Symbol;
@@ -221,23 +221,27 @@ class OrderSender
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_ASK);
           }
-          else // postion_total != 0
-            Print("There is position, don't order");   
+          else if(type_int == 1)
+            PrintFormat("Trend same, do nothing in this peroid!");
+          else if(type_int == 2)
+            PrintFormat("Close the sell position!");     
       }
       
       
       void sell()
       {
-         int postion_total = getPositionTotal();
+         int type_int = closePosition(POSITION_TYPE_BUY);
          
-         if(postion_total == 0)
-         {    
+         if(type_int == 0)
+         {
             PrintFormat("Selling: %s", _Symbol);
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_BID);
          }
-         else // postion_total != 0
-            Print("There is position, don't order");   
+         else if(type_int == 2)
+            PrintFormat("Trend same, do nothing in this peroid!");
+         else if(type_int == 1)
+            PrintFormat("Close the buy position!");
       }
 };

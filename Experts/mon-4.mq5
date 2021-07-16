@@ -10,6 +10,7 @@
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
+
 input ushort ADX_window_param = 14;
 input short MA_window_param = 300;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
@@ -18,6 +19,8 @@ double pDI[];
 double nDI[];
 int MA_handle;
 double MA[];
+int KD_handle;
+
 int OnInit()
   {
 //---
@@ -27,6 +30,7 @@ int OnInit()
    Print("current peroid: ", PeriodSeconds());
    ADX_handle = iADX(_Symbol, peroid_param, ADX_window_param);
    MA_handle = iMA(_Symbol, peroid_param, MA_window_param, 0, MODE_SMA, PRICE_CLOSE);
+   KD_handle = iStochastic(_Symbol, peroid_param, 9, 3, 3, MODE_SMA, STO_CLOSECLOSE);
    EventSetTimer(PeriodSeconds(peroid_param));
    OnTimer();
 //---

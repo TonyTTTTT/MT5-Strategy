@@ -5,7 +5,6 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2021, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
-#include "MACalculator.mqh"
 //+------------------------------------------------------------------+
 //| defines                                                          |
 //+------------------------------------------------------------------+
@@ -141,13 +140,6 @@ class OrderSender
          }
       }
   
-      double getMA()
-      {
-         MACalculator ma_calculator();
-         double ma = ma_calculator.getSimpleMA();
-         PrintFormat("MA: %f", ma);
-         return ma;
-      }
       int getPositionTotal()
       {
          int total = PositionsTotal();
@@ -223,20 +215,11 @@ class OrderSender
          
          if(postion_total == 0)
          {
-            double ma = getMA();
-            
-            if(SymbolInfoDouble(_Symbol, SYMBOL_ASK) > ma || ma == -2)
-            {
-               PrintFormat("Buying: %s", _Symbol);
-               string target = _Symbol;
-               MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
-               MqlTradeResult result = {};
-               sendingOrder(request, result, SYMBOL_ASK);
-            }   
-            else if(ma == -1)
-               Print("error occur when get ma, don't order");
-            else
-               Print("current buy price < MA, don't buy");
+            PrintFormat("Buying: %s", _Symbol);
+            string target = _Symbol;
+            MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
+            MqlTradeResult result = {};
+            sendingOrder(request, result, SYMBOL_ASK);
           }
           else // postion_total != 0
             Print("There is position, don't order");   
@@ -248,19 +231,11 @@ class OrderSender
          int postion_total = getPositionTotal();
          
          if(postion_total == 0)
-         {
-            double ma = getMA();
-            if(SymbolInfoDouble(_Symbol, SYMBOL_BID) < ma || ma == -2)
-            {    
-               PrintFormat("Selling: %s", _Symbol);
-               MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
-               MqlTradeResult result = {};
-               sendingOrder(request, result, SYMBOL_BID);
-            }
-            else if(ma == -1)
-               Print("error occur when get ma, don't order");
-            else
-               Print("current sell price > MA, don't sell");
+         {    
+            PrintFormat("Selling: %s", _Symbol);
+            MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
+            MqlTradeResult result = {};
+            sendingOrder(request, result, SYMBOL_BID);
          }
          else // postion_total != 0
             Print("There is position, don't order");   

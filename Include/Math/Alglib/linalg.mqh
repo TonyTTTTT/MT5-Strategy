@@ -9034,7 +9034,7 @@ static void CEigenVDetect::InternalTREVC(CMatrixDouble &t,const int n,const int 
    CMatrixDouble temp22b;
    CMatrixInt    ipivot44;
 //--- create copy
-   double vselect[];
+   bool vselect[];
    ArrayResizeAL(vselect,ArraySize(cvselect));
    ArrayCopy(vselect,cvselect);
 //--- initialization
