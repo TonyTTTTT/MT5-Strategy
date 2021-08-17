@@ -34,6 +34,8 @@ input double volume_param = 1;
 input ushort deviation_param = 5;
 input ushort tp_point_param = 4500;
 input ushort sl_point_param = 1500;
+input float tp_multiplier_param;
+input float sl_multiplier_param;
 
 class OrderSender
 {
@@ -47,6 +49,8 @@ class OrderSender
          magic = magic_param;
          tp_point = tp_point_param;
          sl_point = sl_point_param;
+         tp_multiplier = tp_multiplier_param;
+         sl_multiplier = sl_multiplier_param;
       }
       
    private:
@@ -56,6 +60,8 @@ class OrderSender
       ulong magic;
       ushort tp_point;
       ushort sl_point;
+      float tp_multiplier;
+      float sl_multiplier;
    private:
       MqlTradeRequest setOrderRequest(ENUM_ORDER_TYPE type, ENUM_SYMBOL_INFO_DOUBLE price_type)
       {
@@ -72,13 +78,17 @@ class OrderSender
          int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
          if(type == ORDER_TYPE_BUY)
          {
-            request.tp = NormalizeDouble(request.price + tp_point * point, digits);
-            request.sl = NormalizeDouble(request.price - sl_point * point, digits);
+            // request.tp = NormalizeDouble(request.price + tp_point * point, digits);
+            // request.sl = NormalizeDouble(request.price - sl_point * point, digits);
+            request.tp = NormalizeDouble(request.price + request.price * tp_multiplier * point, digits);
+            request.sl = NormalizeDouble(request.price - request.price * sl_multiplier * point, digits);
          }
          else // type == ORDER_TYPE_SELL
          {
-            request.tp = NormalizeDouble(request.price - tp_point * point, digits);
-            request.sl = NormalizeDouble(request.price + sl_point * point, digits);           
+            // request.tp = NormalizeDouble(request.price - tp_point * point, digits);
+            // request.sl = NormalizeDouble(request.price + sl_point * point, digits);           
+            request.tp = NormalizeDouble(request.price - request.price * tp_multiplier * point, digits);
+            request.sl = NormalizeDouble(request.price + request.price * sl_multiplier * point, digits);
          }   
          PrintFormat("price: %f, tp: %f, sl: %f",
                      request.price, request.tp, request.sl);
