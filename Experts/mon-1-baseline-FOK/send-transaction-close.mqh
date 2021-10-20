@@ -28,29 +28,17 @@
 
 // buy -> ASK
 // sell -> BID
-input ulong magic_param = 17236;
-input ushort reorder_try_param = 1;
-input double volume_param = 1;
-input ushort deviation_param = 5;
-input ushort tp_point_param = 4500;
-input ushort sl_point_param = 1500;
-input float tp_multiplier_param;
-input float sl_multiplier_param;
 
 class OrderSender
 {
    public:
       // constructor
-      void OrderSender()
+      void OrderSender(ushort reorder_try_param)
       {
-         deviation = deviation_param;
+         deviation = 5;
          reorder_try = reorder_try_param;
-         volume = volume_param;
-         magic = magic_param;
-         tp_point = tp_point_param;
-         sl_point = sl_point_param;
-         tp_multiplier = tp_multiplier_param;
-         sl_multiplier = sl_multiplier_param;
+         volume = 1;
+         magic = 17236;
       }
       
    private:
@@ -58,10 +46,6 @@ class OrderSender
       ushort reorder_try;
       double volume;
       ulong magic;
-      ushort tp_point;
-      ushort sl_point;
-      float tp_multiplier;
-      float sl_multiplier;
    private:
       MqlTradeRequest setOrderRequest(ENUM_ORDER_TYPE type, ENUM_SYMBOL_INFO_DOUBLE price_type)
       {
@@ -74,24 +58,6 @@ class OrderSender
          request.price = SymbolInfoDouble(_Symbol, price_type);
          request.deviation = deviation;
          request.magic = magic;
-         double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
-         int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
-         if(type == ORDER_TYPE_BUY)
-         {
-            // request.tp = NormalizeDouble(request.price + tp_point * point, digits);
-            // request.sl = NormalizeDouble(request.price - sl_point * point, digits);
-            request.tp = NormalizeDouble(request.price + request.price * tp_multiplier * point, digits);
-            request.sl = NormalizeDouble(request.price - request.price * sl_multiplier * point, digits);
-         }
-         else // type == ORDER_TYPE_SELL
-         {
-            // request.tp = NormalizeDouble(request.price - tp_point * point, digits);
-            // request.sl = NormalizeDouble(request.price + sl_point * point, digits);           
-            request.tp = NormalizeDouble(request.price - request.price * tp_multiplier * point, digits);
-            request.sl = NormalizeDouble(request.price + request.price * sl_multiplier * point, digits);
-         }   
-         PrintFormat("price: %f, tp: %f, sl: %f",
-                     request.price, request.tp, request.sl);
          
          return request;
       }
@@ -120,16 +86,11 @@ class OrderSender
                   PrintFormat("OrderSend error: %d, retcode: %d", GetLastError(), result.retcode);
                   request.price = SymbolInfoDouble(_Symbol, price_type);
                }
-               else if(price_type == SYMBOL_ASK)
+               else
                {
                   PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
                   break;
-               }
-               else if(price_type == SYMBOL_BID)
-               {
-                  PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-                  break;
-               }     
+               }   
             }
          }
          else // reorder_try == 65535
@@ -139,23 +100,8 @@ class OrderSender
                PrintFormat("OrderSend error: %d, retcode: %d", GetLastError(), result.retcode);
                request.price = SymbolInfoDouble(_Symbol, price_type);
             }
-            if(price_type == SYMBOL_ASK)
-            {
-               PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-            }
-            else if(price_type == SYMBOL_BID)
-            {
-               PrintFormat("Sucess Sell!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
-            }   
+            PrintFormat("Sucess Buy!\nretcode=%u  deal=%I64u  order=%I64u",result.retcode,result.deal,result.order);
          }
-      }
-  
-      int getPositionTotal()
-      {
-         int total = PositionsTotal();
-         PrintFormat("total: %d", total);
-         
-         return total;
       }
       
    public:
@@ -221,9 +167,9 @@ class OrderSender
       
       void buy()
       {
-         int postion_total = getPositionTotal();
+         int type_int = closePosition(POSITION_TYPE_SELL);
          
-         if(postion_total == 0)
+         if(type_int == 0)
          {
             PrintFormat("Buying: %s", _Symbol);
             string target = _Symbol;
@@ -231,23 +177,27 @@ class OrderSender
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_ASK);
           }
-          else // postion_total != 0
-            Print("There is position, don't order");   
+          else if(type_int == 1)
+            PrintFormat("Trend same, do nothing in this peroid!");
+          else if(type_int == 2)
+            PrintFormat("Close the sell position!");   
       }
       
       
       void sell()
       {
-         int postion_total = getPositionTotal();
+         int type_int = closePosition(POSITION_TYPE_BUY);
          
-         if(postion_total == 0)
-         {    
+         if(type_int == 0)
+         {
             PrintFormat("Selling: %s", _Symbol);
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_BID);
          }
-         else // postion_total != 0
-            Print("There is position, don't order");   
+         else if(type_int == 2)
+            PrintFormat("Trend same, do nothing in this peroid!");
+         else if(type_int == 1)
+            PrintFormat("Close the buy position!");
       }
 };
