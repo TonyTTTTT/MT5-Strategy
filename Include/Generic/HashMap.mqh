@@ -562,13 +562,13 @@ bool CHashMap::Insert(TKey key,TValue value,const bool add)
 //--- search pair with specified key
    for(int i=m_buckets[target_bucket]; i>=0; i=m_entries[i].next)
      {
-      //--- hash compare      
+      //--- hash compare
       if(m_entries[i].hash_code!=hash_code)
         {
          collision_count++;
          continue;
         }
-      //--- value compare     
+      //--- value compare
       if(m_comparer.Equals(m_entries[i].key,key))
         {
          //--- adding duplicate
@@ -583,6 +583,7 @@ bool CHashMap::Insert(TKey key,TValue value,const bool add)
      {
       int new_size=CPrimeGenerator::ExpandPrime(m_count);
       Resize(new_size);
+      target_bucket=hash_code%new_size;
      }
 //--- calculate index
    int index;

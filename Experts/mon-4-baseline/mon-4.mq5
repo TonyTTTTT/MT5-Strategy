@@ -21,13 +21,12 @@ double MA[];
 int OnInit()
   {
 //---
-   //ChartSetSymbolPeriod(0,"XAUUSD",_Period);
+   EventSetTimer(PeriodSeconds(peroid_param));
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
    Print("current peroid: ", PeriodSeconds());
    ADX_handle = iADX(_Symbol, peroid_param, ADX_window_param);
    MA_handle = iMA(_Symbol, peroid_param, MA_window_param, 0, MODE_SMA, PRICE_CLOSE);
-   EventSetTimer(PeriodSeconds(peroid_param));
    OnTimer();
 //---
    return(INIT_SUCCEEDED);
