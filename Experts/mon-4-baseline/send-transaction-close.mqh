@@ -36,6 +36,7 @@ input ushort tp_point_param = 4500;
 input ushort sl_point_param = 1500;
 input float tp_multiplier_param;
 input float sl_multiplier_param;
+input ENUM_ORDER_TYPE_FILLING filling_type_param = ORDER_FILLING_IOC;
 
 class OrderSender
 {
@@ -70,7 +71,7 @@ class OrderSender
          request.symbol = _Symbol;
          request.volume = volume;
          request.type = type;
-         request.type_filling = ORDER_FILLING_FOK;
+         request.type_filling = filling_type_param;
          request.price = SymbolInfoDouble(_Symbol, price_type);
          request.deviation = deviation;
          request.magic = magic;

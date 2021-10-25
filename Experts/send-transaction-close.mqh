@@ -34,6 +34,7 @@ input double volume_param = 1;
 input ushort deviation_param = 5;
 input ushort tp_point_param = 4500;
 input ushort sl_point_param = 1500;
+input ENUM_ORDER_TYPE_FILLING filling_type_param = ORDER_FILLING_IOC;
 
 class OrderSender
 {

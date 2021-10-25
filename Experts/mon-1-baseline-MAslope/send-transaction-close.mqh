@@ -33,6 +33,7 @@ input ulong magic_param = 17236;
 input ushort reorder_try_param = 1;
 input double volume_param = 1;
 input ushort deviation_param = 5;
+input ENUM_ORDER_TYPE_FILLING filling_type_param = ORDER_FILLING_IOC;
 
 class OrderSender
 {
@@ -59,7 +60,7 @@ class OrderSender
          request.symbol = _Symbol;
          request.volume = volume;
          request.type = type;
-         request.type_filling = ORDER_FILLING_IOC;
+         request.type_filling = filling_type_param;
          request.price = SymbolInfoDouble(_Symbol, price_type);
          request.deviation = deviation;
          request.magic = magic;

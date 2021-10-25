@@ -28,7 +28,7 @@
 
 // buy -> ASK
 // sell -> BID
-
+input ENUM_ORDER_TYPE_FILLING filling_type_param = ORDER_FILLING_IOC;
 class OrderSender
 {
    public:
@@ -54,7 +54,7 @@ class OrderSender
          request.symbol = _Symbol;
          request.volume = volume;
          request.type = type;
-         request.type_filling = ORDER_FILLING_IOC;
+         request.type_filling = filling_type_param;
          request.price = SymbolInfoDouble(_Symbol, price_type);
          request.deviation = deviation;
          request.magic = magic;
