@@ -1,3 +1,5 @@
+## 2021/11/3
+- add new param in mon-4-baseline - enable_multiplier_param that will use tp, sl multiplier when set to true and use tp, sl point when set to false, default to be false
 ## 2021/10/25
 - add input variable: filling_type_param for specify which filling type to use when ordering
 

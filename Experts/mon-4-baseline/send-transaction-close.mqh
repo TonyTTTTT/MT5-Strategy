@@ -37,7 +37,7 @@ input ushort sl_point_param = 1500;
 input float tp_multiplier_param;
 input float sl_multiplier_param;
 input ENUM_ORDER_TYPE_FILLING filling_type_param = ORDER_FILLING_IOC;
-input bool multiplier_enable = false;
+input bool enable_multiplier_param = false;
 
 class OrderSender
 {
@@ -83,7 +83,7 @@ class OrderSender
          {
             // request.tp = NormalizeDouble(request.price + tp_point * point, digits);
             // request.sl = NormalizeDouble(request.price - sl_point * point, digits);
-            if(multiplier_enable)
+            if(enable_multiplier_param)
             {
                request.tp = NormalizeDouble(request.price + request.price * tp_multiplier * point, digits);
                request.sl = NormalizeDouble(request.price - request.price * sl_multiplier * point, digits);
@@ -96,7 +96,7 @@ class OrderSender
          }
          else // type == ORDER_TYPE_SELL
          {     
-            if(multiplier_enable)
+            if(enable_multiplier_param)
             {     
                request.tp = NormalizeDouble(request.price - request.price * tp_multiplier * point, digits);
                request.sl = NormalizeDouble(request.price + request.price * sl_multiplier * point, digits);
