@@ -11,14 +11,14 @@
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
+input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 int OnInit()
   {
 //---
-   //ChartSetSymbolPeriod(0,"XAUUSD",_Period);
+   EventSetTimer(PeriodSeconds(peroid_param));
    Print("Successful initialization!");
    Print("current symbol: ", _Symbol);
    Print("current peroid: ", PeriodSeconds());
-   EventSetTimer(PeriodSeconds());
    OnTimer();
 //---
    return(INIT_SUCCEEDED);
