@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                       OpenCL.mqh |
-//|                   Copyright 2016-2017, MetaQuotes Software Corp. |
+//|                             Copyright 2000-2023, MetaQuotes Ltd. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 
@@ -26,28 +26,46 @@ public:
                      COpenCL();
                     ~COpenCL();
    //--- get handles
-   int               GetContext(void)    const { return(m_context);             }
-   int               GetProgram(void)    const { return(m_program);             }
+   int               GetContext(void) const { return(m_context); }
+   int               GetProgram(void) const { return(m_program); }
    int               GetKernel(const int kernel_index) const;
    string            GetKernelName(const int kernel_index) const;
-   //--- global memory size
+   //--- global and local memory size
    bool              GetGlobalMemorySize(long &global_memory_size);
+   bool              GetLocalMemorySize(long &local_memory_size);
+   //--- maximal workgroup size
+   bool              GetMaxWorkgroupSize(long &max_workgroup_size);
    //--- check support working with double
    bool              SupportDouble(void) const { return(m_support_cl_khr_fp64); }
    //--- initialization and shutdown
    bool              Initialize(const string program,const bool show_log=true);
-   void              Shutdown();
+   bool              ContextCreate(const int device=CL_USE_ANY);
+   bool              ProgramCreate(const string program,const bool show_log=true);
+   void              ContextClean(void);
+   void              Shutdown(void);
    //--- set buffers/kernels count
    bool              SetBuffersCount(const int total_buffers);
    bool              SetKernelsCount(const int total_kernels);
    //--- kernel operations
    bool              KernelCreate(const int kernel_index,const string kernel_name);
    bool              KernelFree(const int kernel_index);
+   //--- device and kernel info
+   long              GetDeviceInfo(const int prop);
+   long              GetDeviceInfoInteger(ENUM_OPENCL_PROPERTY_INTEGER prop);
+   long              GetKernelInfoInteger(const int kernel_index,ENUM_OPENCL_PROPERTY_INTEGER prop);
    //--- buffer operations
    bool              BufferCreate(const int buffer_index,const uint size_in_bytes,const uint flags);
    bool              BufferFree(const int buffer_index);
    template<typename T>
    bool              BufferFromArray(const int buffer_index,T &data[],const uint data_array_offset,const uint data_array_count,const uint flags);
+   template<typename T>
+   bool              BufferFromMatrix(const int buffer_index,matrix<T> &data,const uint flags);
+   template<typename T>
+   bool              BufferFromVector(const int buffer_index,vector<T> &data,const uint flags);
+   template<typename T>
+   bool              BufferToMatrix(const int buffer_index,matrix<T> &data,const ulong rows=-1,const ulong cols=-1);
+   template<typename T>
+   bool              BufferToVector(const int buffer_index,vector<T> &data,const ulong size=-1);
    template<typename T>
    bool              BufferRead(const int buffer_index,T &data[],const uint cl_buffer_offset,const uint data_array_offset,const uint data_array_count);
    template<typename T>
@@ -116,11 +134,50 @@ bool COpenCL::GetGlobalMemorySize(long &global_memory_size)
    return(true);
   }
 //+------------------------------------------------------------------+
+//| GetLocalMemorySize                                               |
+//+------------------------------------------------------------------+
+bool COpenCL::GetLocalMemorySize(long &local_memory_size)
+  {
+   if(m_context==INVALID_HANDLE)
+      return(false);
+
+//--- get local memory size
+   local_memory_size=CLGetInfoInteger(m_context,CL_DEVICE_LOCAL_MEM_SIZE);
+   if(local_memory_size==-1)
+      return(false);
+//---
+   return(true);
+  }
+//+------------------------------------------------------------------+
+//| GetMaxWorkgroupSize                                              |
+//+------------------------------------------------------------------+
+bool COpenCL::GetMaxWorkgroupSize(long &max_workgroup_size)
+  {
+   if(m_context==INVALID_HANDLE)
+      return(false);
+
+//--- get maximal workgroup size
+   max_workgroup_size=CLGetInfoInteger(m_context,CL_DEVICE_MAX_WORK_GROUP_SIZE);
+   if(max_workgroup_size==-1)
+      return(false);
+//---
+   return(true);
+  }
+//+------------------------------------------------------------------+
 //| Initialize                                                       |
 //+------------------------------------------------------------------+
-bool COpenCL::Initialize(const string program,const bool show_log=true)
+bool COpenCL::Initialize(const string program,const bool show_log)
   {
-   if((m_context=CLContextCreate(CL_USE_ANY))==INVALID_HANDLE)
+   if(!ContextCreate(CL_USE_ANY))
+      return(false);
+   return(ProgramCreate(program,show_log));
+  }
+//+------------------------------------------------------------------+
+//| ContextCreate                                                    |
+//+------------------------------------------------------------------+
+bool COpenCL::ContextCreate(const int device)
+  {
+   if((m_context=CLContextCreate(device))==INVALID_HANDLE)
      {
       Print("OpenCL not found. Error code=",GetLastError());
       return(false);
@@ -138,6 +195,14 @@ bool COpenCL::Initialize(const string program,const bool show_log=true)
             m_support_cl_khr_fp64=true;
         }
      }
+//---
+   return(true);
+  }
+//+------------------------------------------------------------------+
+//| ProgramCreate                                                    |
+//+------------------------------------------------------------------+
+bool COpenCL::ProgramCreate(const string program,const bool show_log)
+  {
 //--- compile the program
    string build_error_log;
    if((m_program=CLProgramCreate(m_context,program,build_error_log))==INVALID_HANDLE)
@@ -158,9 +223,9 @@ bool COpenCL::Initialize(const string program,const bool show_log=true)
    return(true);
   }
 //+------------------------------------------------------------------+
-//| Shutdown                                                         |
+//| ContextClean                                                     |
 //+------------------------------------------------------------------+
-void COpenCL::Shutdown()
+void COpenCL::ContextClean()
   {
 //--- remove buffers
    if(m_buffers_total>0)
@@ -176,12 +241,20 @@ void COpenCL::Shutdown()
          KernelFree(i);
       m_kernels_total=0;
      }
-//--- remove program and context
+//--- remove program
    if(m_program!=INVALID_HANDLE)
      {
       CLProgramFree(m_program);
       m_program=INVALID_HANDLE;
      }
+  }
+//+------------------------------------------------------------------+
+//| Shutdown                                                         |
+//+------------------------------------------------------------------+
+void COpenCL::Shutdown()
+  {
+   ContextClean();
+//--- remove context
    if(m_context!=INVALID_HANDLE)
      {
       CLContextFree(m_context);
@@ -273,6 +346,56 @@ bool COpenCL::KernelFree(const int kernel_index)
    return(true);
   }
 //+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+long COpenCL::GetDeviceInfo(const int prop)
+  {
+   if(m_context==INVALID_HANDLE)
+      return(-1);
+
+   uchar data[];
+   uint  size;
+   if(!CLGetDeviceInfo(m_context,prop,data,size))
+      return(-1);
+   if(size<4)
+      return(-1);
+
+   union res_data
+     {
+      uchar cdata[8];
+      long  ldata;
+     } res;
+   if(size<=8)
+     {
+      ZeroMemory(res);
+      ArrayCopy(res.cdata,data);
+     }
+   else
+      ArrayCopy(res.cdata,data,0,8);
+
+   return(res.ldata);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+long COpenCL::GetDeviceInfoInteger(ENUM_OPENCL_PROPERTY_INTEGER prop)
+  {
+   if(m_context==INVALID_HANDLE)
+      return(-1);
+
+   return(CLGetInfoInteger(m_context,prop));
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+long COpenCL::GetKernelInfoInteger(const int kernel_index,ENUM_OPENCL_PROPERTY_INTEGER prop)
+  {
+   if(kernel_index<0 || kernel_index>=m_kernels_total)
+      return(-1);
+
+   return(CLGetInfoInteger(m_kernels[kernel_index],prop));
+  }
+//+------------------------------------------------------------------+
 //| BufferCreate                                                     |
 //+------------------------------------------------------------------+
 bool COpenCL::BufferCreate(const int buffer_index,const uint size_in_bytes,const uint flags)
@@ -281,7 +404,7 @@ bool COpenCL::BufferCreate(const int buffer_index,const uint size_in_bytes,const
    if(buffer_index<0 || buffer_index>=m_buffers_total)
       return(false);
 
-   if(m_context==INVALID_HANDLE || m_program==INVALID_HANDLE)
+   if(m_context==INVALID_HANDLE)
       return(false);
 //---
    int buffer_handle=CLBufferCreate(m_context,size_in_bytes,flags);
@@ -316,7 +439,7 @@ template<typename T>
 bool COpenCL::BufferFromArray(const int buffer_index,T &data[],const uint data_array_offset,const uint data_array_count,const uint flags)
   {
 //--- check parameters
-   if(m_context==INVALID_HANDLE || m_program==INVALID_HANDLE)
+   if(m_context==INVALID_HANDLE)
       return(false);
    if(buffer_index<0 || buffer_index>=m_buffers_total || data_array_count<=0)
       return(false);
@@ -339,6 +462,89 @@ bool COpenCL::BufferFromArray(const int buffer_index,T &data[],const uint data_a
       return(false);
 //---
    return(true);
+  }
+//+------------------------------------------------------------------+
+//| BufferWriteFromMatrix                                            |
+//+------------------------------------------------------------------+
+template<typename T>
+bool COpenCL::BufferFromMatrix(const int buffer_index,matrix<T> &data,const uint flags)
+  {
+//--- check parameters
+   if(m_context==INVALID_HANDLE)
+      return(false);
+   if(buffer_index<0 || buffer_index>=m_buffers_total || data.Rows()==0 || data.Cols()==0)
+      return(false);
+
+   uint matrix_size=uint(data.Rows()*data.Cols());
+//--- buffer does not exists, create it
+   if(m_buffers[buffer_index]==INVALID_HANDLE)
+     {
+      uint size_in_bytes=matrix_size*sizeof(T);
+      int buffer_handle=CLBufferCreate(m_context,size_in_bytes,flags);
+      if(buffer_handle!=INVALID_HANDLE)
+         m_buffers[buffer_index]=buffer_handle;
+      else
+         return(false);
+     }
+//--- write data to OpenCL buffer
+   return(CLBufferWrite(m_buffers[buffer_index],0,data));
+  }
+//+------------------------------------------------------------------+
+//| BufferWriteFromVector                                            |
+//+------------------------------------------------------------------+
+template<typename T>
+bool COpenCL::BufferFromVector(const int buffer_index,vector<T> &data,const uint flags)
+  {
+//--- check parameters
+   if(m_context==INVALID_HANDLE)
+      return(false);
+   if(buffer_index<0 || buffer_index>=m_buffers_total || data.Size()==0)
+      return(false);
+
+//--- buffer does not exists, create it
+   if(m_buffers[buffer_index]==INVALID_HANDLE)
+     {
+      uint size_in_bytes=(uint)data.Size()*sizeof(T);
+      int buffer_handle=CLBufferCreate(m_context,size_in_bytes,flags);
+      if(buffer_handle!=INVALID_HANDLE)
+         m_buffers[buffer_index]=buffer_handle;
+      else
+         return(false);
+     }
+//--- write data to OpenCL buffer
+   return(CLBufferWrite(m_buffers[buffer_index],0,data));
+  }
+//+------------------------------------------------------------------+
+//| BufferReadToMatrix                                               |
+//+------------------------------------------------------------------+
+template<typename T>
+bool COpenCL::BufferToMatrix(const int buffer_index,matrix<T> &data,const ulong rows,const ulong cols)
+  {
+//--- check parameters
+   if(buffer_index<0 || buffer_index>=m_buffers_total)
+      return(false);
+   if(m_buffers[buffer_index]==INVALID_HANDLE)
+      return(false);
+   if(m_context==INVALID_HANDLE || m_program==INVALID_HANDLE)
+      return(false);
+//--- read data from OpenCL buffer
+   return(CLBufferRead(m_buffers[buffer_index],0,data,rows,cols));
+  }
+//+------------------------------------------------------------------+
+//| BufferReadToVector                                               |
+//+------------------------------------------------------------------+
+template<typename T>
+bool COpenCL::BufferToVector(const int buffer_index,vector<T> &data,const ulong size)
+  {
+//--- check parameters
+   if(buffer_index<0 || buffer_index>=m_buffers_total)
+      return(false);
+   if(m_buffers[buffer_index]==INVALID_HANDLE)
+      return(false);
+   if(m_context==INVALID_HANDLE || m_program==INVALID_HANDLE)
+      return(false);
+//--- read data from OpenCL buffer
+   return(CLBufferRead(m_buffers[buffer_index],0,data,size));
   }
 //+------------------------------------------------------------------+
 //| BufferRead                                                       |
@@ -371,7 +577,7 @@ bool COpenCL::BufferWrite(const int buffer_index,T &data[],const uint cl_buffer_
       return(false);
    if(m_buffers[buffer_index]==INVALID_HANDLE)
       return(false);
-   if(m_context==INVALID_HANDLE || m_program==INVALID_HANDLE)
+   if(m_context==INVALID_HANDLE)
       return(false);
 //--- write data to OpenCL buffer
    uint data_written=CLBufferWrite(m_buffers[buffer_index],data,cl_buffer_offset,data_array_offset,data_array_count);

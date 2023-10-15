@@ -1,7 +1,7 @@
 //+------------------------------------------------------------------+
 //|                                                       Canvas.mqh |
-//|                   Copyright 2009-2017, MetaQuotes Software Corp. |
-//|                                              http://www.mql5.com |
+//|                             Copyright 2000-2023, MetaQuotes Ltd. |
+//|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Files\FileBin.mqh>
 #include <Controls\Rect.mqh>
@@ -142,6 +142,8 @@ public:
    void              PolygonSmooth(int &x[],int &y[],const uint clr,const int size,
                                    ENUM_LINE_STYLE style=STYLE_SOLID,ENUM_LINE_END end_style=LINE_END_ROUND,
                                    double tension=0.5,double step=10);
+   //--- BitBlt
+   void              BitBlt(int dst_x,int dst_y,const uint &src[],int src_width,int src_height,int src_x,int src_y,int src_dx,int src_dy,uint mode=0);
    //--- for text
    bool              FontSet(const string name,const int size,const uint flags=0,const uint angle=0);
    bool              FontNameSet(string name);
@@ -2098,11 +2100,11 @@ void CCanvas::PixelSetAA(const double x,const double y,const uint clr)
    if(dx>0.0)
       xx[1]=xx[3]=ix+1;
    if(dy<0.0)
-      yy[2]=yy[2]=iy-1;
+      yy[2]=yy[3]=iy-1;
    if(dy==0.0)
-      yy[2]=yy[2]=iy;
+      yy[2]=yy[3]=iy;
    if(dy>0.0)
-      yy[2]=yy[2]=iy+1;
+      yy[2]=yy[3]=iy+1;
 //--- calculate radii and sum of their squares
    for(int i=0; i<4; i++)
      {
@@ -4842,5 +4844,16 @@ double CCanvas::CalcBezierY(const double t,const double y0,const double y1,const
           y1*3*t*((1-t)*(1-t))+
           y2*3*(t*t)*(1-t)+
           y3*(t*t*t));
+  }
+//+------------------------------------------------------------------+
+//| BitBlt                                                           |
+//+------------------------------------------------------------------+
+void CCanvas::BitBlt(int dst_x,int dst_y,const uint &src[],int src_width,int src_height,int src_x,int src_y,int src_dx,int src_dy,uint mode)
+  {
+   for(int y=0; y<src_dy; y++)
+      for(int x=0; x<src_dx; x++)
+        {
+         PixelSet(dst_x+x,dst_y+y,src[(src_y+y)*src_width+src_x+x]);
+        }
   }
 //+------------------------------------------------------------------+
