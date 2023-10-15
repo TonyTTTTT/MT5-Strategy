@@ -16,16 +16,25 @@ input short MA_window_param = 5;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 input ENUM_APPLIED_PRICE applied_price_param = PRICE_CLOSE;
 MqlRates rates[];
+OrderSender order_sender();
 
 int MA_handle;
 int MA_low_handle;
 int RSI_handle;
 double MA[];
 double rsi_buffer[];
-double last_rsi_u50_price;
-double last_rsi_d50_greenk_high_price;
-double last_rsi_d50_redk_low_price;
+
+double last_rsi_u50_close_price = INT_MAX;
+double last_rsi_d50_close_price = INT_MIN;
+
+double last_rsi_u50_redk_low_price = INT_MIN;
+double last_rsi_d50_greenk_high_price = INT_MAX;
+
+double last_rsi_u50_redk_close_price = INT_MIN;
+double last_rsi_d50_greenk_close_price = INT_MAX;
+
 bool red_k = true;
+
 
 int OnInit()
   {
@@ -91,39 +100,51 @@ void OnTimer()
       Print("error occur when calling RSI");
    }
       
-      
+
+   if (rates[0].close>last_rsi_d50_greenk_high_price && rates[0].close>MA[0]) {
+      PrintFormat("Meet buy strategy 2\ncurrent price: %f, last rsi down 50 green k high price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_d50_greenk_high_price, MA_window_param, MA[0]);
+      // OrderSender order_sender();
+      order_sender.buy();
+   } else if (rates[0].close<last_rsi_u50_redk_low_price && rates[0].close<MA[0]) {
+      PrintFormat("Meet sell strategy 2\ncurrent price: %f, last rsi up 50 red k low price: %f,  %d_MA: %f\nSell!", rates[0].close, last_rsi_u50_redk_low_price, MA_window_param, MA[0]);
+      // OrderSender order_sender();
+      order_sender.sell(); 
+   }
+
    if (rsi_buffer[0] > 50) {
-      if (rates[0].close>last_rsi_u50_price && rates[0].close>MA[0]) {
-         PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_price, MA_window_param, MA[0]);
-         OrderSender order_sender();
+      if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA[0]) {
+         PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 close price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_close_price, MA_window_param, MA[0]);
+         // OrderSender order_sender();
          order_sender.buy();
       }
-      if (red_k)
-         last_rsi_d50_redk_low_price = rates[0].low;
-      last_rsi_u50_price = rates[0].close;
+      
+      if (red_k) {
+         if (rates[0].close < last_rsi_u50_redk_close_price) {
+            PrintFormat("Sell current buy position\ncurrent price: %f, last rsi up 50 redk close price: %f", rates[0].close, last_rsi_u50_redk_close_price);
+            // OrderSender order_sender();
+            order_sender.sell();      
+         }
+         last_rsi_u50_redk_low_price = rates[0].low;
+         last_rsi_u50_redk_close_price = rates[0].close;
+      }   
+      last_rsi_u50_close_price = rates[0].close;
    } else if (rsi_buffer[0] < 50) {
+      if (rates[0].close<last_rsi_d50_close_price && rates[0].close<MA[0]) {
+         PrintFormat("Meet sell strategy 1\ncurrent price: %f, last rsi down 50 close price: %f,  %d_MA: %f\nSell!", rates[0].close, last_rsi_d50_close_price, MA_window_param, MA[0]);
+         // OrderSender order_sender();
+         order_sender.sell();
+      }
       
-      
-      if (!red_k)
+      if (!red_k) {
+         if (rates[0].close > last_rsi_d50_greenk_close_price) {
+            PrintFormat("Buy current sell position\ncurrent price: %f, last rsi down 50 greenk close price: %f", rates[0].close, last_rsi_d50_greenk_close_price);
+            //OrderSender order_sender();
+            order_sender.buy();
+         }
          last_rsi_d50_greenk_high_price = rates[0].high;
-   }
-   
-   if (rates[0].close>last_rsi_d50_greenk_high_price && rates[0].close>MA) {
-      PrintFormat("Meet buy strategy 2\ncurrent price: %f, last rsi down 50 green k high price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_d50_greenk_high_price, MA_window_param, MA[0]);
-      OrderSender order_sender();
-      order_sender.buy();
-   } else if (rates[0].close<last_rsi_d50_redk_low_price && rates[0].close<MA) {
-      PrintFormat("Meet sell strategy 2\ncurrent price: %f, last rsi up 50 red k low price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_d50_redk_low_price, MA_window_param, MA[0]);
-      OrderSender order_sender();
-      order_sender.sell();      
-   }
-
-
-
-   else
-   {
-      PrintFormat("Didn't meet the strategy, do nothing in this peroid!");
-   }
+         last_rsi_d50_close_price = rates[0].close;
+      }
+   } 
    
    Print("====================================================");
 }
