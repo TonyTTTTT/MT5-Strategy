@@ -227,12 +227,12 @@ class OrderSender
           else if(type_int == 2)
           {
             PrintFormat("Close the sell position!");
-            PrintFormat("Buying: %s", _Symbol);
+            /*PrintFormat("Buying: %s", _Symbol);
             string target = _Symbol;
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_ASK);
-            PrintFormat("append done!");
+            PrintFormat("append done!");*/
           }
       }
       
@@ -253,11 +253,11 @@ class OrderSender
          else if(type_int == 1)
          {
             PrintFormat("Close the buy position!");
-            PrintFormat("Selling: %s", _Symbol);
+            /*PrintFormat("Selling: %s", _Symbol);
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_BID);
-            PrintFormat("append done!");
+            PrintFormat("append done!");*/
          }
       }
 };
