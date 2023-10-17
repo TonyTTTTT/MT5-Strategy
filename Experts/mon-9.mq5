@@ -13,6 +13,7 @@
 
 //input ushort ADX_window_param = 14;
 input short MA_window_param = 5;
+input short RSI_window_param = 5;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 input ENUM_APPLIED_PRICE applied_price_param = PRICE_CLOSE;
 MqlRates rates[];
@@ -44,7 +45,7 @@ int OnInit()
    Print("current symbol: ", _Symbol);
    Print("current peroid: ", PeriodSeconds());
    MA_handle = iMA(_Symbol, peroid_param, MA_window_param, 0, MODE_SMA, applied_price_param);
-   RSI_handle = iRSI(_Symbol, peroid_param, MA_window_param, applied_price_param);
+   RSI_handle = iRSI(_Symbol, peroid_param, RSI_window_param, applied_price_param);
    EventSetTimer(PeriodSeconds(peroid_param));
    OnTimer();
 //---
@@ -101,7 +102,7 @@ void OnTimer()
    }
       
 
-   if (rates[0].close>last_rsi_d50_greenk_high_price && rates[0].close>MA[0]) {
+   /*if (rates[0].close>last_rsi_d50_greenk_high_price && rates[0].close>MA[0]) {
       PrintFormat("Meet buy strategy 2\ncurrent price: %f, last rsi down 50 green k high price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_d50_greenk_high_price, MA_window_param, MA[0]);
       // OrderSender order_sender();
       order_sender.buy();
@@ -113,7 +114,7 @@ void OnTimer()
       order_sender.sell();
       if (PositionsTotal() == 0)
          order_sender.sell();
-   }
+   }*/
 
    if (rsi_buffer[0] > 50) {
       if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA[0]) {
