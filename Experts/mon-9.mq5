@@ -116,23 +116,29 @@ void OnTimer()
       if (PositionsTotal() == 0)
          order_sender.sell();
    }*/
+   if (PositionsTotal() != 0) {
+      if (rsi_buffer[0] < 50) {
+         order_sender.sell();
+      } else if (rsi_buffer[0] >= 50) {
+         order_sender.buy();
+      }
+   }
 
-   if (rsi_buffer[0] > 50) {
+   if (rsi_buffer[0] >= 50) {
       if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA[0]) {
          PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 close price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_close_price, MA_window_param, MA[0]);
          order_sender.buy();
          if (PositionsTotal() == 0)
             order_sender.buy();
       }
-      
-      if (red_k) {
+      /*if (red_k) {
          if (rates[0].close < last_rsi_u50_redk_close_price) {
             PrintFormat("Sell current buy position\ncurrent price: %f, last rsi up 50 redk close price: %f", rates[0].close, last_rsi_u50_redk_close_price);
             order_sender.sell();
          }
          //last_rsi_u50_redk_low_price = rates[0].low;
          last_rsi_u50_redk_close_price = rates[0].close;
-      }
+      }*/
       if (last_rsi>0 && last_rsi<50)
          last_rsi_u50_close_price = rates[0].close;
    } else if (rsi_buffer[0] < 50) {
@@ -142,18 +148,17 @@ void OnTimer()
          if (PositionsTotal() == 0)
             order_sender.sell();
       }
-      
-      if (!red_k) {
+      /*if (!red_k) {
          if (rates[0].close > last_rsi_d50_greenk_close_price) {
             PrintFormat("Buy current sell position\ncurrent price: %f, last rsi down 50 greenk close price: %f", rates[0].close, last_rsi_d50_greenk_close_price);
             order_sender.buy();
          }
          //last_rsi_d50_greenk_high_price = rates[0].high;
          last_rsi_d50_greenk_close_price = rates[0].close;
-      }
+      }*/
       if (last_rsi >= 50)
          last_rsi_d50_close_price = rates[0].close;
-   } 
+   }
    
    Print("====================================================");
    last_rsi = rsi_buffer[0];
