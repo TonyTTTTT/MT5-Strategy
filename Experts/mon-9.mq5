@@ -24,12 +24,13 @@ int MA_low_handle;
 int RSI_handle;
 double MA[];
 double rsi_buffer[];
+double last_rsi = -1;
 
 double last_rsi_u50_close_price = INT_MAX;
 double last_rsi_d50_close_price = INT_MIN;
 
-double last_rsi_u50_redk_low_price = INT_MIN;
-double last_rsi_d50_greenk_high_price = INT_MAX;
+/*double last_rsi_u50_redk_low_price = INT_MIN;
+double last_rsi_d50_greenk_high_price = INT_MAX;*/
 
 double last_rsi_u50_redk_close_price = INT_MIN;
 double last_rsi_d50_greenk_close_price = INT_MAX;
@@ -119,7 +120,6 @@ void OnTimer()
    if (rsi_buffer[0] > 50) {
       if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA[0]) {
          PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 close price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_close_price, MA_window_param, MA[0]);
-         // OrderSender order_sender();
          order_sender.buy();
          if (PositionsTotal() == 0)
             order_sender.buy();
@@ -128,17 +128,16 @@ void OnTimer()
       if (red_k) {
          if (rates[0].close < last_rsi_u50_redk_close_price) {
             PrintFormat("Sell current buy position\ncurrent price: %f, last rsi up 50 redk close price: %f", rates[0].close, last_rsi_u50_redk_close_price);
-            // OrderSender order_sender();
-            order_sender.sell();   
+            order_sender.sell();
          }
-         last_rsi_u50_redk_low_price = rates[0].low;
+         //last_rsi_u50_redk_low_price = rates[0].low;
          last_rsi_u50_redk_close_price = rates[0].close;
-      }   
-      last_rsi_u50_close_price = rates[0].close;
+      }
+      if (last_rsi>0 && last_rsi<50)
+         last_rsi_u50_close_price = rates[0].close;
    } else if (rsi_buffer[0] < 50) {
       if (rates[0].close<last_rsi_d50_close_price && rates[0].close<MA[0]) {
          PrintFormat("Meet sell strategy 1\ncurrent price: %f, last rsi down 50 close price: %f,  %d_MA: %f\nSell!", rates[0].close, last_rsi_d50_close_price, MA_window_param, MA[0]);
-         // OrderSender order_sender();
          order_sender.sell();
          if (PositionsTotal() == 0)
             order_sender.sell();
@@ -147,13 +146,15 @@ void OnTimer()
       if (!red_k) {
          if (rates[0].close > last_rsi_d50_greenk_close_price) {
             PrintFormat("Buy current sell position\ncurrent price: %f, last rsi down 50 greenk close price: %f", rates[0].close, last_rsi_d50_greenk_close_price);
-            //OrderSender order_sender();
             order_sender.buy();
          }
-         last_rsi_d50_greenk_high_price = rates[0].high;
-         last_rsi_d50_close_price = rates[0].close;
+         //last_rsi_d50_greenk_high_price = rates[0].high;
+         last_rsi_d50_greenk_close_price = rates[0].close;
       }
+      if (last_rsi >= 50)
+         last_rsi_d50_close_price = rates[0].close;
    } 
    
    Print("====================================================");
+   last_rsi = rsi_buffer[0];
 }
