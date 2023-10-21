@@ -210,7 +210,7 @@ class OrderSender
       }
       
       
-      void buy()
+      int buy()
       {
          int type_int = closePosition(POSITION_TYPE_SELL);
          
@@ -221,11 +221,11 @@ class OrderSender
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_BUY, SYMBOL_ASK);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_ASK);
-          }
-          else if(type_int == 1)
+            return 0;
+          } else if (type_int == 1) {
             PrintFormat("Trend same, do nothing in this peroid!");
-          else if(type_int == 2)
-          {
+            return 1;
+          } else if (type_int == 2) {
             PrintFormat("Close the sell position!");
             /*PrintFormat("Buying: %s", _Symbol);
             string target = _Symbol;
@@ -233,11 +233,15 @@ class OrderSender
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_ASK);
             PrintFormat("append done!");*/
+            
+            return 2;
+          } else {
+            return -1;
           }
       }
       
       
-      void sell()
+      int sell()
       {
          int type_int = closePosition(POSITION_TYPE_BUY);
          
@@ -247,17 +251,20 @@ class OrderSender
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_BID);
-         }
-         else if(type_int == 2)
+            return 0;
+         } else if (type_int == 2) {
             PrintFormat("Trend same, do nothing in this peroid!");
-         else if(type_int == 1)
-         {
+            return 1;
+         } else if (type_int == 1) {
             PrintFormat("Close the buy position!");
             /*PrintFormat("Selling: %s", _Symbol);
             MqlTradeRequest request = setOrderRequest(ORDER_TYPE_SELL, SYMBOL_BID);
             MqlTradeResult result = {};
             sendingOrder(request, result, SYMBOL_BID);
             PrintFormat("append done!");*/
+            return 2;
+         } else {
+            return -1;
          }
       }
 };
