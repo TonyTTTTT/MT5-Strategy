@@ -40,6 +40,8 @@ double last_rsi_d50_close_price = INT_MIN;
 double buy_point_low_price = INT_MIN;
 double sell_point_high_price = INT_MAX;
 
+double sell_point_close_price = INT_MAX;
+double buy_point_close_price = INT_MIN;
 
 /*double last_rsi_u50_redk_low_price = INT_MIN;
 double last_rsi_d50_greenk_high_price = INT_MAX;*/
@@ -137,16 +139,16 @@ void OnTimer()
       string type = EnumToString((ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE));
       PrintFormat("current position type: %s", type);
       if (type == "POSITION_TYPE_BUY") {
-         if (rsi_buffer[0] < 50 && PositionGetDouble(POSITION_PROFIT) > 0) {
-            PrintFormat("BUY stop profit, profit: %f", PositionGetDouble(POSITION_PROFIT));
+         if (rsi_buffer[0] < 50 && rates[0].close > buy_point_close_price) {
+            PrintFormat("BUY stop profit, current close: %f, buy price: %f", rates[0].close, buy_point_close_price);
             order_sender.sell();
          } else if (rates[0].close < buy_point_low_price) {
             PrintFormat("BUY stop loss, current close: %f, buy_point_low_price: %f", rates[0].close, buy_point_low_price);
             order_sender.sell();
          }   
       } else {
-         if (rsi_buffer[0] >= 50 && PositionGetDouble(POSITION_PROFIT) > 0) {
-            PrintFormat("SELL stop profit, profit: %f", PositionGetDouble(POSITION_PROFIT));
+         if (rsi_buffer[0] >= 50 && rates[0].close < sell_point_close_price) {
+            PrintFormat("SELL stop profit, current close: %f, sell price: %f", rates[0].close, sell_point_close_price);
             order_sender.buy();
          } else if (rates[0].close > sell_point_high_price) {
             PrintFormat("SELL stop loss, current close: %f, sell_point_high_price: %f", rates[0].close, sell_point_high_price);
@@ -162,7 +164,8 @@ void OnTimer()
          if (PositionsTotal() == 0)
             order_response = order_sender.buy();
          if (order_response == 0)   
-            buy_point_low_price = rates[0].low;   
+            buy_point_low_price = rates[0].low;
+         buy_point_close_price = rates[0].close;      
       }
       if (last_rsi>0 && last_rsi<60)
          last_rsi_u50_close_price = rates[0].close;
@@ -173,7 +176,8 @@ void OnTimer()
          if (PositionsTotal() == 0)
             order_response = order_sender.sell();
          if (order_response == 0)      
-            sell_point_high_price = rates[0].high;   
+            sell_point_high_price = rates[0].high;
+         sell_point_close_price = rates[0].close;      
       }
       if (last_rsi >= 60)
          last_rsi_d50_close_price = rates[0].close;
