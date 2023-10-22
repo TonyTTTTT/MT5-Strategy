@@ -16,6 +16,7 @@ input short MA_X_window_param = 5;
 input short MA_Y_window_param = 5;
 input short MA_Z_window_param = 5;
 input short RSI_window_param = 5;
+input short RSI_threshold_param = 60;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 input ENUM_APPLIED_PRICE applied_price_param = PRICE_CLOSE;
 MqlRates rates[];
@@ -50,6 +51,8 @@ double last_rsi_u50_redk_close_price = INT_MIN;
 double last_rsi_d50_greenk_close_price = INT_MAX;
 
 bool red_k = true;
+
+string type;
 
 
 int OnInit()
@@ -136,7 +139,7 @@ void OnTimer()
       
 
    if (PositionsTotal() != 0) {
-      string type = EnumToString((ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE));
+      type = EnumToString((ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE));
       PrintFormat("current position type: %s", type);
       if (type == "POSITION_TYPE_BUY") {
          if (rsi_buffer[0] < 50 && rates[0].close > buy_point_close_price) {
@@ -157,29 +160,33 @@ void OnTimer()
       }   
    }
 
-   if (rsi_buffer[0] >= 60) {
+   if (rsi_buffer[0] >= RSI_threshold_param) {
       if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA_max) {
          PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 close price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_close_price, MA_X_window_param, MA_X[0]);
-         order_response = order_sender.buy();
-         if (PositionsTotal() == 0)
+         if (PositionsTotal() == 0) {
             order_response = order_sender.buy();
-         if (order_response == 0)   
-            buy_point_low_price = rates[0].low;
-         buy_point_close_price = rates[0].close;      
+            buy_point_close_price = rates[0].close;
+         } else if (type == "POSITION_TYPE_SELL") {
+            order_response = order_sender.buy();
+            order_response = order_sender.buy();
+            buy_point_close_price = rates[0].close;
+         }    
       }
-      if (last_rsi>0 && last_rsi<60)
+      if (last_rsi>0 && last_rsi<RSI_threshold_param)
          last_rsi_u50_close_price = rates[0].close;
-   } else if (rsi_buffer[0] < 60) {
+   } else if (rsi_buffer[0] < RSI_threshold_param) {
       if (rates[0].close<last_rsi_d50_close_price && rates[0].close<MA_min) {
          PrintFormat("Meet sell strategy 1\ncurrent price: %f, last rsi down 50 close price: %f,  %d_MA: %f\nSell!", rates[0].close, last_rsi_d50_close_price, MA_X_window_param, MA_X[0]);
-         order_response = order_sender.sell();
-         if (PositionsTotal() == 0)
+         if (PositionsTotal() == 0) {
             order_response = order_sender.sell();
-         if (order_response == 0)      
-            sell_point_high_price = rates[0].high;
-         sell_point_close_price = rates[0].close;      
+            sell_point_close_price = rates[0].close;
+         } else if (type == "POSITION_TYPE_BUY") {
+            order_response = order_sender.sell();
+            order_response = order_sender.sell();
+            sell_point_close_price = rates[0].close;
+         }     
       }
-      if (last_rsi >= 60)
+      if (last_rsi >= RSI_threshold_param)
          last_rsi_d50_close_price = rates[0].close;
    }
    
