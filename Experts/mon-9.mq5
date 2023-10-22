@@ -16,7 +16,8 @@ input short MA_X_window_param = 5;
 input short MA_Y_window_param = 5;
 input short MA_Z_window_param = 5;
 input short RSI_window_param = 5;
-input short RSI_threshold_param = 60;
+input short RSI_high_threshold_param = 60;
+input short RSI_low_threshold_param = 40;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 input ENUM_APPLIED_PRICE applied_price_param = PRICE_CLOSE;
 MqlRates rates[];
@@ -160,7 +161,7 @@ void OnTimer()
       }   
    }
 
-   if (rsi_buffer[0] >= RSI_threshold_param) {
+   if (rsi_buffer[0] >= RSI_high_threshold_param) {
       if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA_max) {
          PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 close price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_close_price, MA_X_window_param, MA_X[0]);
          if (PositionsTotal() == 0) {
@@ -172,9 +173,9 @@ void OnTimer()
             buy_point_close_price = rates[0].close;
          }    
       }
-      if (last_rsi>0 && last_rsi<RSI_threshold_param)
+      if (last_rsi>0 && last_rsi<RSI_high_threshold_param)
          last_rsi_u50_close_price = rates[0].close;
-   } else if (rsi_buffer[0] < RSI_threshold_param) {
+   } else if (rsi_buffer[0] < RSI_low_threshold_param) {
       if (rates[0].close<last_rsi_d50_close_price && rates[0].close<MA_min) {
          PrintFormat("Meet sell strategy 1\ncurrent price: %f, last rsi down 50 close price: %f,  %d_MA: %f\nSell!", rates[0].close, last_rsi_d50_close_price, MA_X_window_param, MA_X[0]);
          if (PositionsTotal() == 0) {
@@ -186,7 +187,7 @@ void OnTimer()
             sell_point_close_price = rates[0].close;
          }     
       }
-      if (last_rsi >= RSI_threshold_param)
+      if (last_rsi >= RSI_low_threshold_param)
          last_rsi_d50_close_price = rates[0].close;
    }
    
