@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                    TestFuzzy.mq5 |
-//|                             Copyright 2000-2023, MetaQuotes Ltd. |
+//|                             Copyright 2000-2024, MetaQuotes Ltd. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 //| Implementation of Fuzzy library in MetaQuotes Language 5         |

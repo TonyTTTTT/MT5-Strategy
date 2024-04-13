@@ -71,12 +71,12 @@ public:
    ulong             ArgMax()                                    { return(m_array.ArgMax()); }
    double            Min()                                       { return(m_array.Min()); }
    ulong             ArgMin()                                    { return(m_array.ArgMin()); }
-   double            Dot(CRowDouble &obj)                        { return(m_array.Dot(obj.ToVector()+0)); }
+   double            Dot(CRowDouble &obj)                        { return(m_array.Dot(obj.ToVector())); }
    double            Dot(vector<double> &obj)                    { return(m_array.Dot(obj)); }
-   double            DotR(CMatrixDouble &obj,int row)            { return(m_array.Dot(obj.Row(row)+0)); }
-   double            DotC(CMatrixDouble &obj,int col)            { return(m_array.Dot(obj.Col(col)+0)); }
+   double            DotR(CMatrixDouble &obj,int row)            { return(m_array.Dot(obj.Row(row))); }
+   double            DotC(CMatrixDouble &obj,int col)            { return(m_array.Dot(obj.Col(col))); }
    vector<double>    MatMul(matrix<double> &obj)                 { return(m_array.MatMul(obj)); }
-   vector<double>    MatMul(CMatrixDouble &obj)                  { return(m_array.MatMul(obj.ToMatrix()+0)); }
+   vector<double>    MatMul(CMatrixDouble &obj)                  { return(m_array.MatMul(obj.ToMatrix())); }
    bool              Clip(const double min,const double max)     { return(m_array.Clip(min,max)); }
    void              Copy(const vector<double> &vect,const int n);
 
@@ -431,15 +431,15 @@ public:
                     ~CRowComplex(void) {}
 
    //--- methods
-   int               Size(void) const                  { return((int)m_array.Size()); }
-   void              Resize(const ulong n)             { m_array.Resize(n); }
-   void              Set(const int i,const complex c)  { m_array[i]=c; }
-   void              Set(const int i,const double d)   { m_array[i]=d+0i; }
-   void              Mul(const int i,const complex c)  { m_array[i]*=c; }
-   void              Mul(const int i,const double d)   { m_array[i]*=d+0i; }
-   void              SetRe(const int i,const double d) { m_array[i].real=d; }
-   void              SetIm(const int i,const double d) { m_array[i].imag=d; }
-   vector<complex>   ToVector(void) const              { return(m_array); }
+   int               Size(void) const                    { return((int)m_array.Size()); }
+   void              Resize(const ulong n)               { m_array.Resize(n); }
+   void              Set(const int i,const complex c)    { m_array[i]=c; }
+   void              Set(const int i,const double d)     { m_array[i]=d+0i; }
+   void              Mul(const int i,const complex c)    { m_array[i]*=c; }
+   void              Mul(const int i,const double d)     { m_array[i]*=d+0i; }
+   void              SetRe(const int i,const double d)   { m_array[i].real=d; }
+   void              SetIm(const int i,const double d)   { m_array[i].imag=d; }
+   vector<complex>   ToVector(void) const                { return(m_array); }
    bool              ToArray(complex &dst[]);
 
    //--- operators
@@ -495,11 +495,11 @@ public:
    int               Cols(void) const                                   { return((int)m_matrix.Cols()); }
    vector<double>    Row(const int row) const                           { return(m_matrix.Row(row)); }
    bool              Row(const int row,const vector<double> &vect)      { return(m_matrix.Row(vect,row)); }
-   bool              Row(const int row,const CRowDouble &vect)          { return m_matrix.Row(vect.ToVector()+0,row); }
+   bool              Row(const int row,const CRowDouble &vect)          { return m_matrix.Row(vect.ToVector(),row); }
    bool              Row(const int row,const CMatrixDouble &mat,const int mat_row) { return(m_matrix.Row(mat.m_matrix.Row(mat_row),row)); }
    vector<double>    Col(const int col) const                           { return(m_matrix.Col(col)); }
    bool              Col(const int col,const vector<double> &vect)      { return(m_matrix.Col(vect,col)); }
-   bool              Col(const int col,const CRowDouble &vect)          { return(m_matrix.Col(vect.ToVector()+0,col)); }
+   bool              Col(const int col,const CRowDouble &vect)          { return(m_matrix.Col(vect.ToVector(),col)); }
    bool              Col(const int col,const CRowInt &vect);
    bool              Resize(const ulong n,const ulong m)                { return(m_matrix.Resize(n,m)); }
    bool              Set(const ulong row,const ulong col,double d);
@@ -520,12 +520,12 @@ public:
    void              Split(ulong &parts[],int axis,matrix<double> &splitted[]) const { m_matrix.Split(parts,axis,splitted); }
    matrix<double>    ToMatrix(void) const                               { return(m_matrix); }
    matrix<double>    TriU(const long diag=0) const                      { return(m_matrix.TriU(diag)); }
-   matrix<double>    TriL(const long diag=0)                            { return(m_matrix.TriL(diag)); }
-   vector<double>    Diag(const long diag=0)                            { return(m_matrix.Diag(diag)); }
+   matrix<double>    TriL(const long diag=0) const                      { return(m_matrix.TriL(diag)); }
+   vector<double>    Diag(const long diag=0) const                      { return(m_matrix.Diag(diag)); }
    void              Diag(const vector<double> &vect,const long diag=0) { m_matrix.Diag(vect,diag); }
-   void              Diag(const CRowDouble &vect,const long diag=0)    { m_matrix.Diag(vect.ToVector()+0,diag); }
-   bool              SwapRows(const ulong row1,const ulong row2)       { return(m_matrix.SwapRows(row1,row2)); }
-   bool              SwapCols(const ulong col1,const ulong col2)       { return(m_matrix.SwapCols(col1,col2)); }
+   void              Diag(const CRowDouble &vect,const long diag=0)     { m_matrix.Diag(vect.ToVector(),diag); }
+   bool              SwapRows(const ulong row1,const ulong row2)        { return(m_matrix.SwapRows(row1,row2)); }
+   bool              SwapCols(const ulong col1,const ulong col2)        { return(m_matrix.SwapCols(col1,col2)); }
    void              Fill(double value)                                 { m_matrix.Fill(value); }
    void              Fill(double value,int rows,int cols);
    matrix<double>    MatMul(CMatrixDouble &matr,bool transpose=false);
@@ -537,22 +537,21 @@ public:
    bool              DeleteCol(int col);
 
    //--- operators
-   vector<double>    operator[](const int i) const           { return(m_matrix.Row(i)); }
-   vector<double>    operator[](const ulong i) const         { return(m_matrix.Row(i)); }
+   const vector<double> operator[](const ulong i) const      { return(m_matrix.Row(i)); }
    void              operator=(const matrix<double> &m)      { m_matrix.Copy(m); }
    void              operator=(const CMatrixDouble &m)       { m_matrix=m.ToMatrix(); }
-   matrix<double>    operator+(const matrix<double> &m);
-   matrix<double>    operator+(const CMatrixDouble &m);
-   matrix<double>    operator+(const double value)           { return(m_matrix+value); };
-   matrix<double>    operator-(const matrix<double> &m);
-   matrix<double>    operator-(const CMatrixDouble &m);
-   matrix<double>    operator-(const double value)           { return(m_matrix-value); };
-   matrix<double>    operator*(const matrix<double> &m);
-   matrix<double>    operator*(const CMatrixDouble &m);
-   matrix<double>    operator*(const double value)           { return(m_matrix*value); };
-   matrix<double>    operator/(const matrix<double> &m);
-   matrix<double>    operator/(const CMatrixDouble &m);
-   matrix<double>    operator/(const double value)           { return(m_matrix/value); };
+   matrix<double>    operator+(const matrix<double> &m) const;
+   matrix<double>    operator+(const CMatrixDouble &m) const;
+   matrix<double>    operator+(const double value) const     { return(m_matrix+value); };
+   matrix<double>    operator-(const matrix<double> &m) const;
+   matrix<double>    operator-(const CMatrixDouble &m) const;
+   matrix<double>    operator-(const double value) const     { return(m_matrix-value); };
+   matrix<double>    operator*(const matrix<double> &m) const;
+   matrix<double>    operator*(const CMatrixDouble &m) const;
+   matrix<double>    operator*(const double value) const     { return(m_matrix*value); };
+   matrix<double>    operator/(const matrix<double> &m) const;
+   matrix<double>    operator/(const CMatrixDouble &m) const;
+   matrix<double>    operator/(const double value) const     { return(m_matrix/value); };
    void              operator*=(const double value)          { m_matrix=m_matrix*value; }
    void              operator/=(const double value)          { m_matrix=m_matrix/value; }
    void              operator+=(const double value)          { m_matrix=m_matrix+value; }
@@ -689,7 +688,7 @@ bool CMatrixDouble::DeleteCol(int col)
 //+------------------------------------------------------------------+
 //| Overloading (+)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator+(const matrix<double> &m)
+matrix<double> CMatrixDouble::operator+(const matrix<double> &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -702,7 +701,7 @@ matrix<double> CMatrixDouble::operator+(const matrix<double> &m)
 //+------------------------------------------------------------------+
 //| Overloading (+)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator+(const CMatrixDouble &m)
+matrix<double> CMatrixDouble::operator+(const CMatrixDouble &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -715,7 +714,7 @@ matrix<double> CMatrixDouble::operator+(const CMatrixDouble &m)
 //+------------------------------------------------------------------+
 //| Overloading (-)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator-(const matrix<double> &m)
+matrix<double> CMatrixDouble::operator-(const matrix<double> &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -728,7 +727,7 @@ matrix<double> CMatrixDouble::operator-(const matrix<double> &m)
 //+------------------------------------------------------------------+
 //| Overloading (-)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator-(const CMatrixDouble &m)
+matrix<double> CMatrixDouble::operator-(const CMatrixDouble &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -741,7 +740,7 @@ matrix<double> CMatrixDouble::operator-(const CMatrixDouble &m)
 //+------------------------------------------------------------------+
 //| Overloading (*)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator*(const matrix<double> &m)
+matrix<double> CMatrixDouble::operator*(const matrix<double> &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -754,7 +753,7 @@ matrix<double> CMatrixDouble::operator*(const matrix<double> &m)
 //+------------------------------------------------------------------+
 //| Overloading (*)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator*(const CMatrixDouble &m)
+matrix<double> CMatrixDouble::operator*(const CMatrixDouble &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -767,7 +766,7 @@ matrix<double> CMatrixDouble::operator*(const CMatrixDouble &m)
 //+------------------------------------------------------------------+
 //| Overloading (/)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator/(const matrix<double> &m)
+matrix<double> CMatrixDouble::operator/(const matrix<double> &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -780,7 +779,7 @@ matrix<double> CMatrixDouble::operator/(const matrix<double> &m)
 //+------------------------------------------------------------------+
 //| Overloading (/)                                                  |
 //+------------------------------------------------------------------+
-matrix<double> CMatrixDouble::operator/(const CMatrixDouble &m)
+matrix<double> CMatrixDouble::operator/(const CMatrixDouble &m) const
   {
    if(m_matrix.Rows()!=m.Rows() || m_matrix.Cols()!=m.Cols())
      {
@@ -812,7 +811,7 @@ public:
    int               Cols(void) const                       { return(Size()>0?m_matrix[0].Size():0); }
    void              Resize(const int n,const int m);
    bool              Set(const int row,const int col,int d);
-   int               Get(const int row,const int col)       { return(m_matrix[row][col]); }
+   int               Get(const int row,const int col) const { return(m_matrix[row][col]); }
    void              Fill(const int value);
 
    //--- operators
@@ -930,12 +929,11 @@ public:
    bool              Mul(const ulong row,const ulong col,const double d);
    bool              Mul(const ulong row,const ulong col,const int d);
    matrix<complex>   TriU(const long diag=0) const                     { return (m_matrix.TriU(diag)); }
-   matrix<complex>   TriL(const long diag=0)                           { return (m_matrix.TriL(diag)); }
+   matrix<complex>   TriL(const long diag=0) const                     { return (m_matrix.TriL(diag)); }
    matrix<complex>   ToMatrix(void) const                              { return (m_matrix); }
 
    //--- operators
-   vector<complex>   operator[](const int i) const       {return(m_matrix.Row(i)); }
-   vector<complex>   operator[](const ulong i) const     { return(m_matrix.Row(i)); }
+   const vector<complex> operator[](const ulong i) const { return(m_matrix.Row(i)); }
    void              operator=(const CMatrixComplex &m)  { m_matrix=m.m_matrix;  }
    void              operator=(const matrix<complex> &m) { m_matrix=m; }
    void              operator*=(const double value)      { m_matrix*=value; }

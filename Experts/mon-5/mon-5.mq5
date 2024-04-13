@@ -6,7 +6,8 @@
 #property copyright "Copyright 2021, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
 #property version   "1.00"
-#include "send-transaction-close.mqh"
+//#include "send-transaction-close.mqh"
+#include "send-transaction-raise.mqh"
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -14,12 +15,14 @@
 //input ushort ADX_window_param = 14;
 input short MA_window_param = 5;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
+input double enoughProfitParam=10000;
 MqlRates rates[];
 
 int MA_high_handle;
 int MA_low_handle;
 double MA_high[];
 double MA_low[];
+OrderSender order_sender;
 
 int OnInit()
   {
@@ -69,19 +72,23 @@ void OnTimer()
    if(rate_num == -1)
       Print("Error occur when calling CopyRates()");
    
+   double totalProfit = order_sender.getCurrentProfit();
+   PrintFormat("Total Profit: %f", totalProfit);
+   
+   if (totalProfit > enoughProfitParam) {
+      order_sender.closeAllPosition();
+   }
    
    if(MA_high_num == -1 || MA_low_num == -1)
       Print("Error occur when calling iMA()");
    else if(rates[0].close > MA_high[0])
    {
       PrintFormat("last close > %d_MA_high, Buy!", MA_window_param);
-      OrderSender order_sender();
       order_sender.buy();
    }
    else if(rates[0].close < MA_low[0])
    {
       PrintFormat("last close < %d_MA_low, Sell!", MA_window_param);
-      OrderSender order_sender();
       order_sender.sell();         
    }
    else
