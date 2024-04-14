@@ -60,6 +60,13 @@ void OnTimer()
 {
    Print("execute OnTimer!");
    
+   double totalProfit = order_sender.getCurrentPositionProfit();
+   PrintFormat("Total Profit: %f", totalProfit);
+   
+   if (totalProfit > enoughProfitParam) {
+      order_sender.closeAllPosition();
+   }
+   
    int MA_high_num = CopyBuffer(MA_high_handle, 0, 0, 2, MA_high);
    if(MA_high_num != -1)
       PrintFormat("MA_high: %f, last MA_high: %f", MA_high[1], MA_high[0]);
@@ -71,13 +78,6 @@ void OnTimer()
    int rate_num = CopyRates(_Symbol, _Period, 0, 2, rates);
    if(rate_num == -1)
       Print("Error occur when calling CopyRates()");
-   
-   double totalProfit = order_sender.getCurrentPositionProfit();
-   PrintFormat("Total Profit: %f", totalProfit);
-   
-   if (totalProfit > enoughProfitParam) {
-      order_sender.closeAllPosition();
-   }
    
    if(MA_high_num == -1 || MA_low_num == -1)
       Print("Error occur when calling iMA()");

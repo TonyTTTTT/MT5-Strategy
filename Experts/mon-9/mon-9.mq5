@@ -20,8 +20,9 @@ input short RSI_high_threshold_param = 60;
 input short RSI_low_threshold_param = 40;
 input ENUM_TIMEFRAMES peroid_param = PERIOD_CURRENT;
 input ENUM_APPLIED_PRICE applied_price_param = PRICE_CLOSE;
+input double enoughProfitParam=10000;
 MqlRates rates[];
-OrderSender order_sender();
+OrderSender order_sender;
 
 int MA_X_handle;
 int MA_Y_handle;
@@ -93,7 +94,7 @@ void OnTick()
 void OnTimer()
 {
    Print("execute OnTimer!");
-
+   
    int rate_num = CopyRates(_Symbol, _Period, 0, 2, rates);
    
    if(rate_num != -1) {
@@ -160,7 +161,8 @@ void OnTimer()
          }
       }   
    }
-
+   
+   
    if (rsi_buffer[0] >= RSI_high_threshold_param) {
       if (rates[0].close>last_rsi_u50_close_price && rates[0].close>MA_max) {
          PrintFormat("Meet buy strategy 1\ncurrent price: %f, last rsi up 50 close price: %f,  %d_MA: %f\nBuy!", rates[0].close, last_rsi_u50_close_price, MA_X_window_param, MA_X[0]);
