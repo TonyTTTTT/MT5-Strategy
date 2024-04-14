@@ -72,7 +72,7 @@ void OnTimer()
    if(rate_num == -1)
       Print("Error occur when calling CopyRates()");
    
-   double totalProfit = order_sender.getCurrentProfit();
+   double totalProfit = order_sender.getCurrentPositionProfit();
    PrintFormat("Total Profit: %f", totalProfit);
    
    if (totalProfit > enoughProfitParam) {

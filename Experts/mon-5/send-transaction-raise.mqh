@@ -31,17 +31,33 @@ class OrderSender
       }
       
    public:
-      double getCurrentProfit() {
+      double getCurrentPositionProfit() {
          int totalPosition = PositionsTotal();
          double profit;
          double totalProfit = 0;
          ulong ticket_pos;
+         ulong ID_pos;
+         double commision=0;
+         HistorySelect(POSITION_TIME, TimeCurrent());
+         int totalDeals = HistoryDealsTotal();
+         double swap;
          
          for (int i=0; i<totalPosition; i++) {
             ticket_pos=PositionGetTicket(i);
+            ID_pos = PositionGetInteger(POSITION_IDENTIFIER);
             PositionSelectByTicket(ticket_pos);
+            swap = PositionGetDouble(POSITION_SWAP);
             profit = PositionGetDouble(POSITION_PROFIT);
-            totalProfit += profit;
+            
+            for (int j=0; j<totalDeals; j++) {
+               if (HistoryDealGetInteger(HistoryDealGetTicket(j), DEAL_POSITION_ID) == ID_pos) {
+                  commision = HistoryDealGetDouble(HistoryDealGetTicket(j), DEAL_COMMISSION);
+                  break;
+               }
+            }
+            
+            
+            totalProfit += (profit+commision+swap);
          }
          return totalProfit;
       }
@@ -66,7 +82,7 @@ class OrderSender
             PrintFormat("Buying: %s", _Symbol);
             bool orderSucess = trade.Buy(this.volume, _Symbol, SymbolInfoDouble(_Symbol, SYMBOL_ASK));
             if (orderSucess) {
-               this.volume += volume_param;
+               this.volume *= 2;
             }   
           } else if(lastPositionType == POSITION_TYPE_BUY) {
             PrintFormat("Trend same, do nothing in this peroid!");   
@@ -80,11 +96,11 @@ class OrderSender
       {
          ENUM_POSITION_TYPE lastPositionType = getLastPositionType();
          
-         if(lastPositionType == 0 || lastPositionType == POSITION_TYPE_BUY) {
+         if(lastPositionType == -1  || lastPositionType == POSITION_TYPE_BUY) {
             PrintFormat("Selling: %s", _Symbol);
             bool orderSucess = trade.Sell(this.volume, _Symbol, SymbolInfoDouble(_Symbol, SYMBOL_BID));
             if (orderSucess) {
-               this.volume += volume_param;
+               this.volume *= 2;
             }   
          } else if(lastPositionType == POSITION_TYPE_SELL) {
             PrintFormat("Trend same, do nothing in this peroid!");
